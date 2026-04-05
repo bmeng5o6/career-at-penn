@@ -408,7 +408,103 @@ def run() -> dict:
     }
     export_json(output, OUTPUT_DIR / "enriched_penn_internships.json")
 
+    # --- Export Supabase-ready JSON (JSONB-friendly) ---
+    print("\n  Exporting Supabase-ready JSON files...")
+    _export_supabase_json(enriched, major_listings, projected, OUTPUT_DIR)
+
     return output
+
+
+def _export_supabase_json(enriched: dict, major_listings: list, projected: dict, output_dir: Path):
+    """Export flat JSON arrays ready for Supabase import with native JSONB columns."""
+    import json as _json
+
+    # --- supabase_employers.json ---
+    # roles, locations, salary_trend as proper JSON arrays/objects
+    employer_rows = []
+    for school, records in enriched.items():
+        for r in records:
+            employer_rows.append({
+                "company": r["company"],
+                "school": r["school"],
+                "year": r.get("year"),
+                "penn_intern_count": r.get("penn_intern_count"),
+                "hourly_median": float(r["hourly_median"]) if r.get("hourly_median") else None,
+                "monthly_estimate": float(r["monthly_estimate"]) if r.get("monthly_estimate") else None,
+                "roles": r.get("roles", []),  # JSONB array
+                "locations": r.get("locations", []),  # JSONB array
+                "salary_trend": r.get("salary_trend", {}),  # JSONB object
+                "levels_fyi_entries": r.get("levels_fyi_entries", 0),
+                "compensation_source": r.get("compensation_source"),
+                "is_projected": r.get("is_projected", False),
+                "data_basis": r.get("data_basis"),
+            })
+
+    with open(output_dir / "supabase_employers.json", "w") as f:
+        _json.dump(employer_rows, f, indent=2)
+    print(f"    supabase_employers.json: {len(employer_rows)} rows")
+
+    # --- supabase_major_listings.json ---
+    # Filter garbage same as CSV export
+    GARBAGE_MAJORS = {
+        'sophomores', 'juniors', 'seniors', 'independent', 'industries',
+        'monthly', 'job/', 'traveled/', 'completed', 'work/', 'average',
+        'part-time', 'full-time', 'volunteer', 'primary summer', 'unpaid',
+        'the school of', 'the college of', 'rate overall', 'chicago',
+        'new york', 'curriculum deferred',
+    }
+    skip_words = ['report', 'survey', 'response', 'salary', 'internship,',
+                  'classes,', 'summer of', 'there were', '%', '$']
+
+    clean_listings = []
+    for ml in major_listings:
+        company = ml.get("company", "")
+        role = ml.get("role", "")
+        major = ml.get("major", "")
+        if any(g in major.lower() for g in GARBAGE_MAJORS):
+            continue
+        if any(w in company.lower() for w in skip_words):
+            continue
+        if any(w in role.lower() for w in skip_words):
+            continue
+        if len(company) < 3 or len(role) < 2 or (company and company[0].isdigit()):
+            continue
+        clean_listings.append({
+            "company": company,
+            "role": role,
+            "major": major,
+            "school": ml.get("school"),
+            "class_year": ml.get("class_year"),
+            "count": ml.get("count", 1),
+            "year": ml.get("year", 2019),
+        })
+
+    with open(output_dir / "supabase_major_listings.json", "w") as f:
+        _json.dump(clean_listings, f, indent=2)
+    print(f"    supabase_major_listings.json: {len(clean_listings)} rows")
+
+    # --- supabase_industry_breakdown.json ---
+    industry_rows = []
+    for source_key in ["actual", "projected"]:
+        for school, year_list in projected.get(source_key, {}).items():
+            for year_data in year_list:
+                year = year_data.get("year")
+                is_projected = year_data.get("is_projected", False)
+                salary = year_data.get("salary_monthly")
+                for ind in year_data.get("industries", []):
+                    industry_rows.append({
+                        "school": school,
+                        "year": year,
+                        "industry": ind.get("industry"),
+                        "percentage": float(ind["percentage"]) if ind.get("percentage") else None,
+                        "confidence": ind.get("confidence"),
+                        "salary_monthly": float(salary) if salary else None,
+                        "is_projected": is_projected,
+                    })
+
+    with open(output_dir / "supabase_industry_breakdown.json", "w") as f:
+        _json.dump(industry_rows, f, indent=2)
+    print(f"    supabase_industry_breakdown.json: {len(industry_rows)} rows")
 
 
 if __name__ == "__main__":
