@@ -1,0 +1,592 @@
+CAREER @ PENN — Sample Company Cards
+======================================================================
+
+HOW TO READ THESE CARDS:
+
+Each card represents a company that hires Penn students. The data
+combines two sources:
+  1. Penn Career Services reports → WHICH companies hire from each school
+  2. Levels.fyi crowd-sourced data → WHAT those companies pay interns
+
+Penn stopped publishing internship data after 2019. For 2026 cards,
+the Penn intern counts come from one of three sources:
+
+  "Projected" = Company had actual Penn intern data in 2017-2019.
+                The count is projected to 2026 using the overall trend
+                in post-grad hiring from 2019 to 2024.
+
+  "Inferred"  = Company appears in Penn post-grad hiring data (2024)
+                but has NO intern-specific data. We assume they also
+                take Penn interns, but the count is from post-grad hires.
+
+  "Actual"    = Direct from Penn Career Services (2017-2019 only).
+
+Salary data from Levels.fyi is always current and not projected.
+
+======================================================================
+  Engineering (SEAS)
+  Showing 2026 data
+======================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│  University of Pennsylvania
+│  School: SEAS    Penn interns (est.): 86
+│
+│  Overall intern pay: $25/hr ($4,330/mo)
+│  Based on 1 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   25/hr  (1 reports)
+│
+│  Locations: Phoenix, AZ
+│  Pay trend: '25: $25/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Meta
+│  School: SEAS    Penn interns (est.): 19
+│
+│  Overall intern pay: $49/hr ($8,487/mo)
+│  Based on 99 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   50/hr  (47 reports)
+│    Research                        $   59/hr  (13 reports)
+│    Data Scientist                  $   48/hr  (9 reports)
+│    Data Engineer                   $   44/hr  (8 reports)
+│
+│  Locations: Menlo Park, United States, Austin, TX, Sunnyvale, CA, New York City, NY
+│  Pay trend: '23: $58/hr → '24: $63/hr → '25: $50/hr → '26: $66/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Microsoft
+│  School: SEAS    Penn interns (est.): 14
+│
+│  Overall intern pay: $43/hr ($7,494/mo)
+│  Based on 151 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   38/hr  (78 reports)
+│    Product Manager                 $   46/hr  (18 reports)
+│    Research                        $   52/hr  (14 reports)
+│    Data Scientist                  $   48/hr  (10 reports)
+│
+│  Locations: Taipei, Taiwan, San Francisco, CA, Austin, TX, Clinton, UT
+│  Pay trend: '23: $46/hr → '24: $43/hr → '25: $47/hr → '26: $49/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Google
+│  School: SEAS    Penn interns (est.): 11
+│
+│  Overall intern pay: $46/hr ($7,967/mo)
+│  Based on 149 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   43/hr  (113 reports)
+│    Research                        $   63/hr  (17 reports)
+│    Hardware Engineer               $   46/hr  (7 reports)
+│    Product Manager                 $   48/hr  (4 reports)
+│
+│  Locations: Taipei, Taiwan, San Francisco, CA, Austin, TX, Boulder, CO
+│  Pay trend: '23: $48/hr → '24: $50/hr → '25: $51/hr → '26: $61/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Five Rings
+│  School: SEAS    Penn interns (est.): 7
+│
+│  Overall intern pay: $120/hr ($20,784/mo)
+│  Based on 8 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $  120/hr  (8 reports)
+│
+│  Locations: New York City, NY
+│  Pay trend: '23: $120/hr → '24: $144/hr → '25: $144/hr → '26: $144/hr
+│
+│  Penn data [INFERRED]: Inferred from post-grad hiring data (no intern-specific data for this company)
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Goldman Sachs
+│  School: SEAS    Penn interns (est.): 6
+│
+│  Overall intern pay: $41/hr ($7,101/mo)
+│  Based on 39 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   40/hr  (30 reports)
+│    Research                        $   70/hr  (3 reports)
+│    Business Analyst                $   38/hr  (1 reports)
+│    Data Analyst                    $   43/hr  (1 reports)
+│
+│  Locations: Bengaluru (Remote), India, San Francisco, CA, London, United Kingdom, Hong Kong
+│  Pay trend: '23: $43/hr → '24: $49/hr → '25: $46/hr → '26: $41/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  McKinsey & Company
+│  School: SEAS    Penn interns (est.): 6
+│
+│  Overall intern pay: $52/hr ($8,993/mo)
+│  Based on 13 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Business Analyst                $   42/hr  (5 reports)
+│    Data Engineer                   $   55/hr  (4 reports)
+│    Software Engineer               $   55/hr  (4 reports)
+│
+│  Locations: Chicago, IL, San Francisco, CA, Waltham, MA, Toronto, Canada
+│  Pay trend: '22: $52/hr → '23: $58/hr → '24: $35/hr → '26: $52/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Susquehanna International Group (SIG)
+│  School: SEAS    Penn interns (est.): 6
+│
+│  Overall intern pay: $68/hr ($11,798/mo)
+│  Based on 20 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   68/hr  (18 reports)
+│    Data Engineer                   $   30/hr  (1 reports)
+│    Quantitative Strategy Developer  $  136/hr  (1 reports)
+│
+│  Locations: Bala Cynwyd, PA, Lisbon, Portugal, Bala Cynwood, PA, Philadelphia, PA
+│  Pay trend: '23: $65/hr → '24: $136/hr → '25: $136/hr → '26: $150/hr
+│
+│  Penn data [INFERRED]: Inferred from post-grad hiring data (no intern-specific data for this company)
+└─────────────────────────────────────────────────────────────────┘
+
+
+======================================================================
+  Wharton School
+  Showing 2026 data
+======================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│  University of Pennsylvania
+│  School: Wharton    Penn interns (est.): 43
+│
+│  Overall intern pay: $25/hr ($4,330/mo)
+│  Based on 1 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   25/hr  (1 reports)
+│
+│  Locations: Phoenix, AZ
+│  Pay trend: '25: $25/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Goldman Sachs
+│  School: Wharton    Penn interns (est.): 22
+│
+│  Overall intern pay: $41/hr ($7,101/mo)
+│  Based on 39 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   40/hr  (30 reports)
+│    Research                        $   70/hr  (3 reports)
+│    Business Analyst                $   38/hr  (1 reports)
+│    Data Analyst                    $   43/hr  (1 reports)
+│
+│  Locations: Bengaluru (Remote), India, San Francisco, CA, London, United Kingdom, Hong Kong
+│  Pay trend: '23: $43/hr → '24: $49/hr → '25: $46/hr → '26: $41/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  JPMorgan Chase & Co.
+│  School: Wharton    Penn interns (est.): 19
+│
+│  Overall intern pay: $43/hr ($7,493/mo)
+│  Based on 103 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   43/hr  (77 reports)
+│    Data Scientist                  $   46/hr  (14 reports)
+│    Business Analyst                $   34/hr  (3 reports)
+│    Product Designer                $   48/hr  (3 reports)
+│
+│  Locations: San Francisco, CA, Austin, TX, Glasgow, Scotland, Bournemouth
+│  Pay trend: '23: $43/hr → '24: $43/hr → '25: $46/hr → '26: $41/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  McKinsey & Company
+│  School: Wharton    Penn interns (est.): 16
+│
+│  Overall intern pay: $52/hr ($8,993/mo)
+│  Based on 13 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Business Analyst                $   42/hr  (5 reports)
+│    Data Engineer                   $   55/hr  (4 reports)
+│    Software Engineer               $   55/hr  (4 reports)
+│
+│  Locations: Chicago, IL, San Francisco, CA, Waltham, MA, Toronto, Canada
+│  Pay trend: '22: $52/hr → '23: $58/hr → '24: $35/hr → '26: $52/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Morgan Stanley
+│  School: Wharton    Penn interns (est.): 15
+│
+│  Overall intern pay: $43/hr ($7,494/mo)
+│  Based on 25 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   43/hr  (22 reports)
+│    Data Analyst                    $   43/hr  (1 reports)
+│    Quantitative Researcher         $   84/hr  (1 reports)
+│    Technology Analyst              $   53/hr  (1 reports)
+│
+│  Locations: Atlanta, GA, London, United Kingdom, Hong Kong, New York City, NY
+│  Pay trend: '23: $24/hr → '24: $44/hr → '25: $40/hr → '26: $43/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Boston Consulting Group
+│  School: Wharton    Penn interns (est.): 14
+│
+│  Overall intern pay: $53/hr ($9,159/mo)
+│  Based on 14 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   69/hr  (5 reports)
+│    Business Analyst                $   53/hr  (3 reports)
+│    Data Engineer                   $   53/hr  (2 reports)
+│    Data Scientist                  $   46/hr  (2 reports)
+│
+│  Locations: Gurugram, India, Seattle, WA, Chicago, IL, London, United Kingdom
+│  Pay trend: '23: $53/hr → '24: $46/hr → '25: $70/hr → '26: $53/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Bain & Company
+│  School: Wharton    Penn interns (est.): 11
+│
+│  Overall intern pay: $40/hr ($6,928/mo)
+│  Based on 8 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   40/hr  (4 reports)
+│    Business Analyst                $   52/hr  (2 reports)
+│    Management Consultant           $   51/hr  (2 reports)
+│
+│  Locations: San Diego, CA, Seattle, WA, Atlanta, GA, Boston, MA
+│  Pay trend: '23: $25/hr → '24: $40/hr → '25: $92/hr → '26: $52/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Evercore
+│  School: Wharton    Penn interns (est.): 10
+│
+│  Overall intern pay: $19/hr ($3,291/mo)
+│  Based on 1 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   19/hr  (1 reports)
+│
+│  Locations: Berlin, CT
+│  Pay trend: '21: $19/hr
+│
+│  Penn data [INFERRED]: Inferred from post-grad hiring data (no intern-specific data for this company)
+└─────────────────────────────────────────────────────────────────┘
+
+
+======================================================================
+  College of Arts & Sciences (CAS)
+  Showing 2026 data
+======================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│  University of Pennsylvania
+│  School: CAS    Penn interns (est.): 27
+│
+│  Overall intern pay: $25/hr ($4,330/mo)
+│  Based on 1 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   25/hr  (1 reports)
+│
+│  Locations: Phoenix, AZ
+│  Pay trend: '25: $25/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Penn Medicine
+│  School: CAS    Penn interns (est.): 23
+│
+│  Overall intern pay: $23/hr ($4,068/mo)
+│  Based on 10 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   23/hr  (9 reports)
+│    Industrial Engineer             $   32/hr  (1 reports)
+│
+│  Locations: Louisville, KY, Atlanta, GA, Mahway, NJ, Alpharetta, GA
+│  Pay trend: '21: $27/hr → '23: $23/hr → '24: $23/hr → '25: $27/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  JPMorgan Chase & Co.
+│  School: CAS    Penn interns (est.): 19
+│
+│  Overall intern pay: $43/hr ($7,493/mo)
+│  Based on 103 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   43/hr  (77 reports)
+│    Data Scientist                  $   46/hr  (14 reports)
+│    Business Analyst                $   34/hr  (3 reports)
+│    Product Designer                $   48/hr  (3 reports)
+│
+│  Locations: San Francisco, CA, Austin, TX, Glasgow, Scotland, Bournemouth
+│  Pay trend: '23: $43/hr → '24: $43/hr → '25: $46/hr → '26: $41/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Boston Consulting Group
+│  School: CAS    Penn interns (est.): 15
+│
+│  Overall intern pay: $53/hr ($9,159/mo)
+│  Based on 14 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   69/hr  (5 reports)
+│    Business Analyst                $   53/hr  (3 reports)
+│    Data Engineer                   $   53/hr  (2 reports)
+│    Data Scientist                  $   46/hr  (2 reports)
+│
+│  Locations: Gurugram, India, Seattle, WA, Chicago, IL, London, United Kingdom
+│  Pay trend: '23: $53/hr → '24: $46/hr → '25: $70/hr → '26: $53/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Capital One
+│  School: CAS    Penn interns (est.): 11
+│
+│  Overall intern pay: $56/hr ($9,699/mo)
+│  Based on 100 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   58/hr  (59 reports)
+│    Business Analyst                $   49/hr  (16 reports)
+│    Product Manager                 $   52/hr  (8 reports)
+│    Data Analyst                    $   50/hr  (6 reports)
+│
+│  Locations: San Francisco, CA, New York City, NY, Champaign, IL, Philadelphia, PA
+│  Pay trend: '23: $55/hr → '24: $55/hr → '25: $57/hr → '26: $60/hr
+│
+│  Penn data [INFERRED]: Inferred from post-grad hiring data (no intern-specific data for this company)
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Morgan Stanley
+│  School: CAS    Penn interns (est.): 9
+│
+│  Overall intern pay: $43/hr ($7,494/mo)
+│  Based on 25 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   43/hr  (22 reports)
+│    Data Analyst                    $   43/hr  (1 reports)
+│    Quantitative Researcher         $   84/hr  (1 reports)
+│    Technology Analyst              $   53/hr  (1 reports)
+│
+│  Locations: Atlanta, GA, London, United Kingdom, Hong Kong, New York City, NY
+│  Pay trend: '23: $24/hr → '24: $44/hr → '25: $40/hr → '26: $43/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  McKinsey & Company
+│  School: CAS    Penn interns (est.): 9
+│
+│  Overall intern pay: $52/hr ($8,993/mo)
+│  Based on 13 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Business Analyst                $   42/hr  (5 reports)
+│    Data Engineer                   $   55/hr  (4 reports)
+│    Software Engineer               $   55/hr  (4 reports)
+│
+│  Locations: Chicago, IL, San Francisco, CA, Waltham, MA, Toronto, Canada
+│  Pay trend: '22: $52/hr → '23: $58/hr → '24: $35/hr → '26: $52/hr
+│
+│  Penn data [INFERRED]: Inferred from post-grad hiring data (no intern-specific data for this company)
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Goldman Sachs
+│  School: CAS    Penn interns (est.): 8
+│
+│  Overall intern pay: $41/hr ($7,101/mo)
+│  Based on 39 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   40/hr  (30 reports)
+│    Research                        $   70/hr  (3 reports)
+│    Business Analyst                $   38/hr  (1 reports)
+│    Data Analyst                    $   43/hr  (1 reports)
+│
+│  Locations: Bengaluru (Remote), India, San Francisco, CA, London, United Kingdom, Hong Kong
+│  Pay trend: '23: $43/hr → '24: $49/hr → '25: $46/hr → '26: $41/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+
+======================================================================
+  School of Nursing
+  Showing 2026 data
+======================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Penn Medicine
+│  School: Nursing    Penn interns (est.): 32
+│
+│  Overall intern pay: $23/hr ($4,068/mo)
+│  Based on 10 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   23/hr  (9 reports)
+│    Industrial Engineer             $   32/hr  (1 reports)
+│
+│  Locations: Louisville, KY, Atlanta, GA, Mahway, NJ, Alpharetta, GA
+│  Pay trend: '21: $27/hr → '23: $23/hr → '24: $23/hr → '25: $27/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  University of Pennsylvania
+│  School: Nursing    Penn interns (est.): 2
+│
+│  Overall intern pay: $25/hr ($4,330/mo)
+│  Based on 1 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   25/hr  (1 reports)
+│
+│  Locations: Phoenix, AZ
+│  Pay trend: '25: $25/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Center
+│  School: Nursing    Penn interns (est.): 2
+│
+│  Overall intern pay: $30/hr ($5,196/mo)
+│  Based on 2 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   30/hr  (2 reports)
+│
+│  Locations: Chicago, IL
+│  Pay trend: '20: $30/hr → '21: $30/hr
+│
+│  Penn data [PROJECTED]: Projected from 2019 internship data using 2019→2024 post-grad employment trends
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Northwestern Medicine
+│  School: Nursing    Penn interns (est.): 2
+│
+│  Overall intern pay: $24/hr ($4,243/mo)
+│  Based on 13 salary reports on Levels.fyi
+│
+│  Pay by role:
+│    Software Engineer               $   23/hr  (6 reports)
+│    Product Designer                $   32/hr  (2 reports)
+│    Business Analyst                $   30/hr  (1 reports)
+│    Data Engineer                   $   23/hr  (1 reports)
+│
+│  Locations: Milwaukee, WI
+│  Pay trend: '22: $24/hr → '23: $34/hr → '24: $30/hr → '25: $24/hr
+│
+│  Penn data [INFERRED]: Inferred from post-grad hiring data (no intern-specific data for this company)
+└─────────────────────────────────────────────────────────────────┘
+
+
+======================================================================
+  Per-Major Job Listings [ACTUAL 2019 DATA]
+  Real internship placements from Penn Career Services — not projected.
+  Format: Company, Role [class year at time of internship]
+======================================================================
+
+  Computer Science (SEAS, 155 placements):
+    Aidoc                               AI Engineering Intern [Rising Junior]
+    Amazon                              Software Development Engineering Intern [Rising Junior]
+    Amazon                              Software Development Engineering Intern [Rising Senior]
+    AQR Capital Management              Business Development Intern [Rising Senior]
+    Bank of America                     Technology Analyst Intern [Rising Junior]
+    BankMobile                          Software Development Intern [Rising Sophomore]
+    ... and 149 more
+
+  Finance (Wharton, 125 placements):
+    Aegon                               Intern [Rising Junior]
+    AleaCapital                         Summer Analyst [Rising Senior]
+    Alliance Holdings                   Private Equity Intern [Rising Junior]
+    Anchin                              Block & Anchin Accounting Firm, Summer Analyst [Rising Junior]
+    Apollo Global Management            Summer Analyst [Rising Junior]
+    AQR Capital Management              Business Development Intern [Rising Senior]
+    ... and 119 more
+
+  Bioengineering (SEAS, 54 placements):
+    Abbott Laboratories                 Applied Research and Marketing Intern [Rising Senior]
+    Amgen                               Undergraduate Intern [Rising Sophomore]
+    Anheuser Busch                      Global Management Trainee Intern [Rising Senior]
+    CancerCare Manitoba                 Research Assistant [Rising Sophomore]
+    CEMEX                               Continuous Improvement Engineering [Rising Senior]
+    Center for Human Development        Corporate Marketing Specialist [Rising Sophomore]
+    ... and 48 more
+
+  Political Science (CAS, 87 placements):
+    Accenture                           Consulting Summer Analyst [Rising Senior]
+    Alexsar                             Analyst [Rising Junior]
+    American Academy of Diplomacy       Intern [Rising Senior]
+    Audax Group                         Summer Analyst [Rising Senior]
+    Bank of America                     Investment Banking Summer Analyst [Rising Senior]
+    Bank of America                     Seasonal Client Associate [Rising Senior]
+    ... and 81 more
