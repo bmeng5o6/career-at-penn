@@ -65,6 +65,115 @@ type Filters = {
   projectedOnly: boolean;
 };
 
+const PREVIEW_STATS: InternshipStats = {
+  record_count: 412,
+  unique_companies: 128,
+  year_range: {
+    min: 2022,
+    max: 2025,
+  },
+  compensation: {
+    median_hourly: 38,
+    records_with_compensation: 215,
+  },
+  data_basis: {
+    projected: 84,
+    inferred: 97,
+    actual: 231,
+  },
+};
+
+const PREVIEW_EMPLOYERS: EmployerRow[] = [
+  {
+    company: "Susquehanna (SIG)",
+    school: "SEAS",
+    year: 2025,
+    penn_intern_count: 34,
+    hourly_median: 57,
+    monthly_estimate: 9880,
+    compensation_source: "levels.fyi",
+    data_basis: "actual",
+    levels_fyi_entries: 100,
+  },
+  {
+    company: "Citadel Securities",
+    school: "Wharton",
+    year: 2025,
+    penn_intern_count: 31,
+    hourly_median: 60,
+    monthly_estimate: 10400,
+    compensation_source: "levels.fyi",
+    data_basis: "actual",
+    levels_fyi_entries: 100,
+  },
+  {
+    company: "Comcast",
+    school: "All schools",
+    year: 2024,
+    penn_intern_count: 45,
+    hourly_median: 32,
+    monthly_estimate: 5540,
+    compensation_source: "inferred",
+    data_basis: "inferred",
+    levels_fyi_entries: null,
+  },
+  {
+    company: "CHOP",
+    school: "Nursing",
+    year: 2024,
+    penn_intern_count: 34,
+    hourly_median: 29,
+    monthly_estimate: 5030,
+    compensation_source: "projected",
+    data_basis: "projected",
+    levels_fyi_entries: null,
+  },
+];
+
+const PREVIEW_INDUSTRIES: IndustryRow[] = [
+  { industry: "Quantitative Trading", percentage: 24.5, school: "SEAS", year: 2025, is_projected: false },
+  { industry: "Finance", percentage: 19.2, school: "Wharton", year: 2025, is_projected: false },
+  { industry: "Technology", percentage: 17.8, school: "SEAS", year: 2025, is_projected: false },
+  { industry: "Healthcare", percentage: 14.4, school: "Nursing", year: 2024, is_projected: false },
+  { industry: "Consulting", percentage: 12.6, school: "CAS", year: 2025, is_projected: false },
+  { industry: "Media", percentage: 8.3, school: "CAS", year: 2024, is_projected: false },
+];
+
+const PREVIEW_LISTINGS: ListingRow[] = [
+  {
+    company: "Susquehanna (SIG)",
+    role: "Software Engineering Intern",
+    major: "CIS",
+    school: "SEAS",
+    class_year: "2026",
+    count: 12,
+  },
+  {
+    company: "Citadel Securities",
+    role: "Quantitative Research Intern",
+    major: "Math",
+    school: "SEAS",
+    class_year: "2026",
+    count: 8,
+  },
+  {
+    company: "Comcast",
+    role: "Business Analyst Intern",
+    major: "Economics",
+    school: "CAS",
+    class_year: "2027",
+    count: 7,
+  },
+  {
+    company: "CHOP",
+    role: "Healthcare Strategy Intern",
+    major: "Biology",
+    school: "Nursing",
+    class_year: "2026",
+    count: 6,
+  },
+];
+
 const initialFilters: Filters = {
   school: "",
   year: "",
@@ -128,6 +237,7 @@ export default function InternshipExplorer() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const deferredCompany = useDeferredValue(filters.company);
 
@@ -223,10 +333,20 @@ export default function InternshipExplorer() {
           setListings(listingsPayload.data);
           setEmployerMeta(employersPayload.meta);
           setListingMeta(listingsPayload.meta);
+          setPreviewMode(false);
         });
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
-        setError(err instanceof Error ? err.message : "Failed to load internship data");
+        startTransition(() => {
+          setStats(PREVIEW_STATS);
+          setEmployers(PREVIEW_EMPLOYERS);
+          setIndustries(PREVIEW_INDUSTRIES);
+          setListings(PREVIEW_LISTINGS);
+          setEmployerMeta({ total: PREVIEW_EMPLOYERS.length });
+          setListingMeta({ total: PREVIEW_LISTINGS.length });
+          setPreviewMode(true);
+        });
+        setError(null);
       } finally {
         setLoading(false);
       }
@@ -287,6 +407,11 @@ export default function InternshipExplorer() {
             Crowd-sourced Penn internship data, organized into a clean employer view using only
             the fields currently available in your API.
           </p>
+          {previewMode ? (
+            <div className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+              Preview mode: showing local sample values shaped like your current backend fields.
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-[1.75rem] border border-gray-200 bg-white p-5 shadow-sm">
