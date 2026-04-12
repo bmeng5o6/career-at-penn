@@ -756,9 +756,9 @@ export default function InternshipExplorer() {
               {loading ? (
                 <p className="text-sm text-gray-500">Loading major listings...</p>
               ) : listings.length ? (
-                listings.map((row) => (
+                listings.map((row, index) => (
                   <article
-                    key={`${row.company}-${row.role}-${row.major}-${row.school}`}
+                    key={`${row.company}-${row.role}-${row.major}-${row.school}-${row.class_year ?? "na"}-${row.count ?? "na"}-${index}`}
                     className="rounded-3xl border border-gray-200 bg-gray-50 p-4"
                   >
                     <div className="flex items-start justify-between gap-4">
