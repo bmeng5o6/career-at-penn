@@ -328,15 +328,15 @@ export default function InternshipExplorer() {
       setLoading(true);
       setError(null);
 
-      try {
-        const activeFilters = {
-          school: filters.school,
-          year: filters.year,
-          company: deferredCompany.trim(),
-          dataBasis: filters.dataBasis,
-          projectedOnly: filters.projectedOnly,
-        };
+      const activeFilters = {
+        school: filters.school,
+        year: filters.year,
+        company: deferredCompany.trim(),
+        dataBasis: filters.dataBasis,
+        projectedOnly: filters.projectedOnly,
+      };
 
+      try {
         const statsQuery = buildQuery({
           school: activeFilters.school,
         });
