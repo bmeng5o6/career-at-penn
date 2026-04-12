@@ -1,201 +1,78 @@
-"use client";
+import React from 'react';
+import Navbar from '../components/Navbar';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+// 1. Define dummy data
+const STATS_DATA = [
+  { label: "85% of Finance concentrators secured IB/PE/HF internships by junior summer", icon: "📈" },
+  { label: "Stats + CIS dual majors had the highest starting salaries across all Penn schools", icon: "📖" },
+  { label: "Management concentrators in consulting clubs: 60% MBB placement rate", icon: "👥" },
+  { label: "Real Estate concentrators with local internships had 90% Philly job placement", icon: "⭐" },
+];
 
-interface OutcomeRow {
-  id: number;
-  school: string;
-  class_year: number;
-  known_outcomes: number | null;
-  full_time_employment: number | null;
-  continuing_education: number | null;
-  seeking_employment: number | null;
-  part_time_employment: number | null;
-  overall_positive_rate: number | null;
-}
+const PATH_DATA = [
+  {
+    insight: "Finance concentrators in the Wharton Undergraduate Finance Club who took FNCE 2070 overwhelmingly placed into PE/HF",
+    tags: ["FNCE 1010", "FNCE 1070", "STAT 1020", "Wharton Finance Club"],
+    path: "Goldman Sachs → Blackstone"
+  },
+  {
+    insight: "Quant-focused Wharton students with CIS cross-enrollment dominated quantitative trading roles",
+    tags: ["FNCE 1070", "FNCE 1070", "CIS 1100", "Penn Blockchain", "Sigma Eta Pi"],
+    path: "Citadel → Two Sigma"
+  }
+];
 
-interface Stats {
-  record_count: number;
-  year_range: { min: number; max: number };
-  averages: {
-    full_time_employment: number | null;
-    continuing_education: number | null;
-    seeking_employment: number | null;
-    part_time_employment: number | null;
-    overall_positive_rate: number | null;
-  };
-}
-
-function pct(value: number | null) {
-  if (value == null) return "\u2014";
-  return `${(value * 100).toFixed(1)}%`;
-}
-
-export default function Home() {
-  const [schools, setSchools] = useState<string[]>([]);
-  const [selectedSchool, setSelectedSchool] = useState<string>("");
-  const [outcomes, setOutcomes] = useState<OutcomeRow[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function fetchSchools() {
-      const { data } = await supabase
-        .from("penn_outcomes")
-        .select("school")
-        .order("school");
-      if (data) {
-        const unique = [...new Set(data.map((r: { school: string }) => r.school))];
-        setSchools(unique);
-      }
-    }
-    fetchSchools();
-  }, []);
-
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-
-      let query = supabase
-        .from("penn_outcomes")
-        .select("*")
-        .order("class_year", { ascending: false });
-
-      if (selectedSchool) {
-        query = query.ilike("school", selectedSchool);
-      }
-
-      const { data } = await query;
-
-      if (data) {
-        setOutcomes(data as OutcomeRow[]);
-
-        const avg = (arr: (number | null)[]) => {
-          const valid = arr.filter((v): v is number => v != null);
-          return valid.length
-            ? +(valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(3)
-            : null;
-        };
-
-        setStats({
-          record_count: data.length,
-          year_range: {
-            min: Math.min(...data.map((r) => r.class_year)),
-            max: Math.max(...data.map((r) => r.class_year)),
-          },
-          averages: {
-            full_time_employment: avg(data.map((r) => r.full_time_employment)),
-            continuing_education: avg(data.map((r) => r.continuing_education)),
-            seeking_employment: avg(data.map((r) => r.seeking_employment)),
-            part_time_employment: avg(data.map((r) => r.part_time_employment)),
-            overall_positive_rate: avg(data.map((r) => r.overall_positive_rate)),
-          },
-        });
-      }
-
-      setLoading(false);
-    }
-    fetchData();
-  }, [selectedSchool]);
-
+export default function StatisticsPage() {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6 md:p-12">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mb-2">
-          Career at Penn
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mb-8">
-          Post-graduation outcomes by school and class year
+    <main className="min-h-screen bg-zinc-50">
+      <Navbar />
+      
+      <div className="max-w-5xl mx-auto py-12 px-6">
+        <h2 className="text-xl font-bold text-zinc-900">Quad-School Intelligence</h2>
+        <p className="text-zinc-500 mb-8">
+          Personalized for <span className="font-semibold text-zinc-700">Healthcare Management</span> at <span className="font-semibold text-zinc-700">Wharton</span>, Class of 2026
         </p>
 
-        {/* School Filter */}
-        <div className="mb-8">
-          <label htmlFor="school-select" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-            Filter by School
-          </label>
-          <select
-            id="school-select"
-            value={selectedSchool}
-            onChange={(e) => setSelectedSchool(e.target.value)}
-            className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Schools</option>
-            {schools.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+        {/* Stat Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
+          {STATS_DATA.map((stat, i) => (
+            <div key={i} className="flex items-center p-6 bg-white border border-zinc-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+              <span className="text-2xl mr-4">{stat.icon}</span>
+              <p className="text-sm font-medium text-zinc-800">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Stats Summary Cards */}
-        {stats && !loading && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <StatCard label="Avg Full-Time Employment" value={pct(stats.averages.full_time_employment)} />
-            <StatCard label="Avg Continuing Education" value={pct(stats.averages.continuing_education)} />
-            <StatCard label="Avg Seeking Employment" value={pct(stats.averages.seeking_employment)} />
-            <StatCard label="Avg Part-Time Employment" value={pct(stats.averages.part_time_employment)} />
-            <StatCard label="Avg Positive Outcome Rate" value={pct(stats.averages.overall_positive_rate)} />
+        {/* Placeholder for Chart */}
+        <div className="bg-white border border-zinc-200 rounded-xl p-8 mb-12 shadow-sm">
+          <h3 className="text-lg font-bold mb-6 text-zinc-800 underline decoration-zinc-300">Wharton → Full-Time Outcomes</h3>
+          <div className="h-48 w-full bg-zinc-50 rounded-lg flex items-center justify-center border-2 border-dashed border-zinc-200">
+            <p className="text-zinc-400 font-mono text-sm">[ Bar Chart Component Goes Here ]</p>
           </div>
-        )}
+        </div>
 
-        {/* Data Table */}
-        {loading ? (
-          <p className="text-zinc-500 dark:text-zinc-400">Loading...</p>
-        ) : outcomes.length === 0 ? (
-          <p className="text-zinc-500 dark:text-zinc-400">No data found.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-zinc-100 dark:bg-zinc-900 text-left text-zinc-600 dark:text-zinc-400">
-                  <th className="px-4 py-3 font-medium">School</th>
-                  <th className="px-4 py-3 font-medium">Class Year</th>
-                  <th className="px-4 py-3 font-medium text-right">Known Outcomes</th>
-                  <th className="px-4 py-3 font-medium text-right">Full-Time Employment</th>
-                  <th className="px-4 py-3 font-medium text-right">Continuing Education</th>
-                  <th className="px-4 py-3 font-medium text-right">Seeking Employment</th>
-                  <th className="px-4 py-3 font-medium text-right">Part-Time</th>
-                  <th className="px-4 py-3 font-medium text-right">Positive Outcome</th>
-                </tr>
-              </thead>
-              <tbody>
-                {outcomes.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-t border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
-                  >
-                    <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{row.school}</td>
-                    <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{row.class_year}</td>
-                    <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">{row.known_outcomes ?? "\u2014"}</td>
-                    <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">{pct(row.full_time_employment)}</td>
-                    <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">{pct(row.continuing_education)}</td>
-                    <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">{pct(row.seeking_employment)}</td>
-                    <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">{pct(row.part_time_employment)}</td>
-                    <td className="px-4 py-3 text-right text-zinc-700 dark:text-zinc-300">{pct(row.overall_positive_rate)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {stats && !loading && (
-          <p className="mt-4 text-xs text-zinc-400">
-            {stats.record_count} records | Class years {stats.year_range.min}\u2013{stats.year_range.max}
-          </p>
-        )}
+        {/* Alumni Path Intelligence */}
+        <h2 className="text-xl font-bold text-zinc-900 mb-6">Alumni Path Intelligence</h2>
+        <div className="space-y-4">
+          {PATH_DATA.map((item, i) => (
+            <div key={i} className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm">
+              <p className="italic text-zinc-700 mb-4">"{item.insight}"</p>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap gap-2">
+                  {item.tags.map(tag => (
+                    <span key={tag} className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md text-xs font-semibold border border-indigo-200">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                  Path: <span className="text-zinc-600">{item.path}</span>
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4">
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">{label}</p>
-      <p className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{value}</p>
-    </div>
+    </main>
   );
 }
