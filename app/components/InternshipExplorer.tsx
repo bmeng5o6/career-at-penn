@@ -224,6 +224,62 @@ function formatBasis(value: string | null) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function matchesFilters(
+  value: { school?: string | null; year?: number | null; company?: string | null; data_basis?: string | null },
+  filters: {
+    school: string;
+    year: string;
+    company: string;
+    dataBasis: string;
+  }
+) {
+  const matchesSchool = !filters.school || value.school === filters.school;
+  const matchesYear = !filters.year || String(value.year ?? "") === filters.year;
+  const matchesCompany =
+    !filters.company ||
+    (value.company ?? "").toLowerCase().includes(filters.company.toLowerCase());
+  const matchesBasis = !filters.dataBasis || value.data_basis === filters.dataBasis;
+
+  return matchesSchool && matchesYear && matchesCompany && matchesBasis;
+}
+
+function buildPreviewStats(employers: EmployerRow[]): InternshipStats {
+  const hourlyRates = employers
+    .map((row) => row.hourly_median)
+    .filter((value): value is number => value != null && value > 0);
+  const years = employers
+    .map((row) => row.year)
+    .filter((value): value is number => value != null);
+  const uniqueCompanies = new Set(employers.map((row) => row.company)).size;
+
+  const sortedRates = [...hourlyRates].sort((a, b) => a - b);
+  const mid = Math.floor(sortedRates.length / 2);
+  const median =
+    sortedRates.length === 0
+      ? null
+      : sortedRates.length % 2
+        ? sortedRates[mid]
+        : (sortedRates[mid - 1] + sortedRates[mid]) / 2;
+
+  return {
+    record_count: employers.length,
+    unique_companies: uniqueCompanies,
+    year_range: {
+      min: years.length ? Math.min(...years) : PREVIEW_STATS.year_range.min,
+      max: years.length ? Math.max(...years) : PREVIEW_STATS.year_range.max,
+    },
+    compensation: {
+      median_hourly: median,
+      records_with_compensation: hourlyRates.length,
+    },
+    data_basis: {
+      projected: employers.filter((row) => row.data_basis === "projected").length,
+      inferred: employers.filter((row) => row.data_basis === "inferred").length,
+      actual: employers.filter((row) => row.data_basis === "actual").length,
+    },
+  };
+}
+
 export default function InternshipExplorer() {
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [schools, setSchools] = useState<string[]>([]);
@@ -254,7 +310,9 @@ export default function InternshipExplorer() {
           setSchools(payload.schools.filter(Boolean));
         });
       } catch {
-        // Keep the page usable even if the school filter cannot preload.
+        startTransition(() => {
+          setSchools([...new Set(PREVIEW_EMPLOYERS.map((row) => row.school).filter(Boolean))]);
+        });
       }
     }
 
@@ -337,13 +395,29 @@ export default function InternshipExplorer() {
         });
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
+        const previewEmployers = PREVIEW_EMPLOYERS.filter((row) =>
+          matchesFilters(row, activeFilters)
+        );
+        const previewIndustries = PREVIEW_INDUSTRIES.filter((row) => {
+          const matchesSchool = !activeFilters.school || row.school === activeFilters.school;
+          const matchesYear = !activeFilters.year || String(row.year ?? "") === activeFilters.year;
+          return matchesSchool && matchesYear;
+        });
+        const previewListings = PREVIEW_LISTINGS.filter((row) => {
+          const matchesSchool = !activeFilters.school || row.school === activeFilters.school;
+          const matchesCompany =
+            !activeFilters.company ||
+            row.company.toLowerCase().includes(activeFilters.company.toLowerCase());
+          return matchesSchool && matchesCompany;
+        });
+
         startTransition(() => {
-          setStats(PREVIEW_STATS);
-          setEmployers(PREVIEW_EMPLOYERS);
-          setIndustries(PREVIEW_INDUSTRIES);
-          setListings(PREVIEW_LISTINGS);
-          setEmployerMeta({ total: PREVIEW_EMPLOYERS.length });
-          setListingMeta({ total: PREVIEW_LISTINGS.length });
+          setStats(buildPreviewStats(previewEmployers));
+          setEmployers(previewEmployers);
+          setIndustries(previewIndustries);
+          setListings(previewListings);
+          setEmployerMeta({ total: previewEmployers.length });
+          setListingMeta({ total: previewListings.length });
           setPreviewMode(true);
         });
         setError(null);
