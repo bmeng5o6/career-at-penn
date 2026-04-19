@@ -90,40 +90,38 @@ def _extrapolate_industries(
     for year_data in clean_years.values():
         all_industries |= set(year_data.keys())
 
+    # Calculate annual rate of change per industry from FD data
+    fd_years = sorted(clean_years.keys())
+    annual_change: dict[str, float] = {}
+    for industry in all_industries:
+        fd_values = [clean_years[y].get(industry, 0) for y in fd_years]
+        if len(fd_years) >= 2 and (fd_years[-1] - fd_years[0]) > 0:
+            total_change = fd_values[-1] - fd_values[0]
+            annual_change[industry] = total_change / (fd_years[-1] - fd_years[0])
+        else:
+            annual_change[industry] = 0
+
+    # Use the latest FD year as the reference point for projecting forward
+    reference_year = fd_years[-1] if fd_years else 2024
+
     results = {}
     for target_year in target_years:
         projected = {}
+        years_from_ref = target_year - reference_year
+
         for industry in all_industries:
-            # Get baseline value
             base_val = baseline.get(industry, 0)
+            offset = INDUSTRY_OFFSETS.get(industry, 0)
 
-            # Get FD trend for this industry
-            fd_years = sorted(clean_years.keys())
-            fd_values = [clean_years[y].get(industry, 0) for y in fd_years]
-
-            if len(fd_years) >= 2:
-                # Calculate FD trend direction
-                earliest_fd = fd_values[0]
-                latest_fd = fd_values[-1]
-                fd_change = latest_fd - earliest_fd
-
-                # Apply offset correction
-                offset = INDUSTRY_OFFSETS.get(industry, 0)
-
-                # Project: baseline + fd_change - offset_correction
-                # The offset accounts for systematic difference between summer and first-dest
-                projected_val = base_val + fd_change - offset
-
-                # Clamp to reasonable range
-                projected_val = max(0, min(100, projected_val))
-            else:
-                projected_val = base_val
+            # Project: baseline + (annual_change * years_from_reference) - offset
+            change = annual_change.get(industry, 0) * years_from_ref
+            projected_val = max(0, min(100, base_val + change - offset))
 
             projected[industry] = round(projected_val, 1)
 
-        # Normalize to ~100%
+        # Always normalize to 100%
         total = sum(projected.values())
-        if total > 0 and abs(total - 100) > 5:
+        if total > 0:
             factor = 100 / total
             projected = {k: round(v * factor, 1) for k, v in projected.items()}
 
@@ -361,6 +359,84 @@ def run() -> dict:
         print(f"    2026 top industries: {', '.join(f'{n} {v:.0f}%' for n, v in top_3)}")
         if sal_2026:
             print(f"    2026 projected salary: ${sal_2026:.0f}/mo")
+
+    # --- Project "All" (all schools combined) ---
+    # Same method as per-school: 2017-2019 Summer Outcomes as internship baseline,
+    # overall First Destination for the trend
+    print(f"\n  Projecting All schools combined...")
+    summary_summer = summer_data.get("summaries", {})
+    overall_fd = fd_data.get("overall", {})
+    overall_fd_industry_trend = _get_industry_trend(overall_fd)
+    overall_fd_salary_trend = _get_salary_trend(overall_fd)
+
+    # Internship baseline from overall Summer Outcomes (2019, fallback 2018, 2017)
+    overall_baseline_industries = {}
+    overall_baseline_salary = None
+    for yr in ["2019", "2018", "2017"]:
+        if yr in summary_summer:
+            for ind in summary_summer[yr].get("industries", []):
+                overall_baseline_industries[ind["industry"]] = float(ind["percentage"])
+            sal = summary_summer[yr].get("salary_monthly")
+            if sal:
+                overall_baseline_salary = float(sal)
+            if overall_baseline_industries:
+                print(f"    Using Summer Outcomes {yr} as internship baseline ({len(overall_baseline_industries)} industries)")
+                break
+
+    # Project industries using FD trend
+    if overall_baseline_industries and overall_fd_industry_trend:
+        overall_projected_industries = _extrapolate_industries(
+            overall_baseline_industries, overall_fd_industry_trend, target_years
+        )
+    else:
+        overall_projected_industries = {y: overall_baseline_industries for y in target_years}
+        print(f"    WARNING: insufficient data for industry projection")
+
+    # Project salary
+    if overall_baseline_salary and overall_fd_salary_trend:
+        overall_projected_salaries = _extrapolate_salary(
+            overall_baseline_salary, overall_fd_salary_trend, target_years
+        )
+    else:
+        overall_projected_salaries = {}
+
+    # Merge all school employer lists for "All"
+    all_employer_set: dict[str, dict] = {}
+    for school_proj in all_projections.values():
+        for yr_data in school_proj:
+            if yr_data["year"] == target_years[-1]:
+                for emp in yr_data.get("employers", []):
+                    c = emp.get("company") if isinstance(emp, dict) else str(emp)
+                    if c not in all_employer_set:
+                        all_employer_set[c] = emp
+
+    all_school_projections = []
+    for year in target_years:
+        year_data = {
+            "year": year,
+            "school": "All",
+            "is_projected": True,
+            "source": "projected",
+            "projection_method": "Projected from 2017-2019 overall internship data using 2017-2021 post-grad trends",
+            "industries": [],
+            "salary_monthly": overall_projected_salaries.get(year),
+            "employers": list(all_employer_set.values()),
+        }
+        industries = overall_projected_industries.get(year, {})
+        for ind_name, pct in sorted(industries.items(), key=lambda x: -x[1]):
+            if pct > 0:
+                year_data["industries"].append({
+                    "industry": ind_name,
+                    "percentage": pct,
+                    "confidence": _confidence_for_industry(ind_name),
+                })
+        all_school_projections.append(year_data)
+
+    all_projections["All"] = all_school_projections
+
+    proj_2026 = overall_projected_industries.get(2026, {})
+    top_3 = sorted(proj_2026.items(), key=lambda x: -x[1])[:3]
+    print(f"    2026 top industries: {', '.join(f'{n} {v:.0f}%' for n, v in top_3)}")
 
     # --- Also include actual Summer Outcomes data (2017-2019) for historical view ---
     actual_data = {}

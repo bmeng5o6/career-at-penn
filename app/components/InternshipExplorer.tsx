@@ -374,7 +374,7 @@ export default function InternshipExplorer() {
         });
 
         const industryQuery = buildQuery({
-          school: activeFilters.school,
+          school: activeFilters.school || "All",
           year: activeFilters.year,
           is_projected: activeFilters.projectedOnly || undefined,
         });
@@ -619,7 +619,6 @@ export default function InternshipExplorer() {
               }
               className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#1a2a6c]"
             >
-              <option value="">All years</option>
               {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((y) => (
                 <option key={y} value={String(y)}>{y}</option>
               ))}
@@ -913,7 +912,7 @@ export default function InternshipExplorer() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Hourly Median</p>
+                      <p className="text-sm text-gray-500">Hourly Estimate</p>
                       <p className="mt-2 text-4xl font-light text-gray-900">
                         {row.hourly_median != null
                           ? new Intl.NumberFormat("en-US", {
@@ -921,18 +920,6 @@ export default function InternshipExplorer() {
                               currency: "USD",
                               maximumFractionDigits: 0,
                             }).format(row.hourly_median)
-                          : "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Monthly Estimate</p>
-                      <p className="mt-2 text-4xl font-light text-gray-900">
-                        {row.monthly_estimate != null
-                          ? new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: "USD",
-                              maximumFractionDigits: 0,
-                            }).format(row.monthly_estimate)
                           : "N/A"}
                       </p>
                     </div>
