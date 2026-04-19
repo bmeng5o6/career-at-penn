@@ -292,9 +292,44 @@ def run() -> dict:
                         projected_employers.append(emp)
                         seen_companies.add(company)
 
+        # --- Calculate employer count growth rate from FD data ---
+        # Use total FD hires across years to compute a year-over-year growth factor
+        fd_total_hires = {}
+        for yr, emps in fd_employer_trend.items():
+            if yr not in COVID_EXCLUSION_YEARS:
+                total = sum(e.get("count", 0) if isinstance(e, dict) else 0 for e in emps)
+                if total > 0:
+                    fd_total_hires[yr] = total
+
         # --- Build projection records ---
         school_projections = []
         for year in target_years:
+            # Scale employer counts for this year
+            year_employers = []
+            for emp in projected_employers:
+                company = emp.get("company") if isinstance(emp, dict) else str(emp)
+                base_count = emp.get("count", 0) if isinstance(emp, dict) else 0
+
+                if base_count > 0 and len(fd_total_hires) >= 2:
+                    fd_years = sorted(fd_total_hires.keys())
+                    # Growth rate per year from FD hiring
+                    n_years = fd_years[-1] - fd_years[0]
+                    if n_years > 0 and fd_total_hires[fd_years[0]] > 0:
+                        annual_growth = (fd_total_hires[fd_years[-1]] / fd_total_hires[fd_years[0]]) ** (1 / n_years)
+                    else:
+                        annual_growth = 1.0
+                    # Scale from base year (latest FD or 2019) to target year
+                    base_year = fd_years[-1] if fd_years else 2019
+                    years_diff = year - base_year
+                    scaled_count = max(1, round(base_count * (annual_growth ** years_diff)))
+                else:
+                    scaled_count = base_count
+
+                year_employers.append({
+                    "company": company,
+                    "count": scaled_count,
+                })
+
             year_data = {
                 "year": year,
                 "school": school,
@@ -303,7 +338,7 @@ def run() -> dict:
                 "projection_method": f"Linear extrapolation from Penn Career Services 2019 Summer Outcomes + 2019-2024 First Destination trends, COVID years excluded, offset-corrected",
                 "industries": [],
                 "salary_monthly": projected_salaries.get(year),
-                "employers": projected_employers,
+                "employers": year_employers,
             }
 
             industries = projected_industries.get(year, {})

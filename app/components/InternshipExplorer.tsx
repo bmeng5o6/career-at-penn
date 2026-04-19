@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useDeferredValue, useEffect, useState } from "react";
+import { startTransition, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
 
 type InternshipStats = {
   record_count: number;
@@ -21,6 +21,8 @@ type InternshipStats = {
   school?: string;
 };
 
+type RoleEntry = { role: string; hourly_median: number; count: number };
+
 type EmployerRow = {
   company: string;
   school: string;
@@ -31,6 +33,9 @@ type EmployerRow = {
   compensation_source: string | null;
   data_basis: string | null;
   levels_fyi_entries: number | null;
+  roles: RoleEntry[] | null;
+  locations: string[] | null;
+  salary_trend: Record<string, number> | null;
 };
 
 type IndustryRow = {
@@ -94,6 +99,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "levels.fyi",
     data_basis: "actual",
     levels_fyi_entries: 100,
+    roles: null, locations: null, salary_trend: null,
   },
   {
     company: "Citadel Securities",
@@ -105,6 +111,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "levels.fyi",
     data_basis: "actual",
     levels_fyi_entries: 100,
+    roles: null, locations: null, salary_trend: null,
   },
   {
     company: "Comcast",
@@ -116,6 +123,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "inferred",
     data_basis: "inferred",
     levels_fyi_entries: null,
+    roles: null, locations: null, salary_trend: null,
   },
   {
     company: "CHOP",
@@ -127,6 +135,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "projected",
     data_basis: "projected",
     levels_fyi_entries: null,
+    roles: null, locations: null, salary_trend: null,
   },
 ];
 
@@ -176,7 +185,7 @@ const PREVIEW_LISTINGS: ListingRow[] = [
 
 const initialFilters: Filters = {
   school: "",
-  year: "",
+  year: "2026",
   company: "",
   dataBasis: "",
   projectedOnly: false,
@@ -288,6 +297,20 @@ export default function InternshipExplorer() {
   const [employers, setEmployers] = useState<EmployerRow[]>([]);
   const [industries, setIndustries] = useState<IndustryRow[]>([]);
   const [listings, setListings] = useState<ListingRow[]>([]);
+  const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
+  const [expandedLevelsFyi, setExpandedLevelsFyi] = useState<string | null>(null);
+  const [companyListings, setCompanyListings] = useState<ListingRow[]>([]);
+  const [loadingListings, setLoadingListings] = useState(false);
+  const [listingCounts, setListingCounts] = useState<Record<string, number>>({});
+  const [showBreakdowns, setShowBreakdowns] = useState(true);
+  const [majorFilter, setMajorFilter] = useState(""); // "" = All majors
+  const [classYearFilter, setClassYearFilter] = useState(""); // "" = All years
+  const [allListings, setAllListings] = useState<ListingRow[]>([]);
+  const [loadingMoreListings, setLoadingMoreListings] = useState(false);
+  const [listingOffset, setListingOffset] = useState(0);
+  const [hasMoreListings, setHasMoreListings] = useState(true);
+  const listingScrollRef = useRef<HTMLDivElement>(null);
+  const LISTING_PAGE_SIZE = 50;
   const [employerMeta, setEmployerMeta] = useState<Meta | null>(null);
   const [listingMeta, setListingMeta] = useState<Meta | null>(null);
 
@@ -347,7 +370,7 @@ export default function InternshipExplorer() {
           company: activeFilters.company,
           data_basis: activeFilters.dataBasis,
           is_projected: activeFilters.projectedOnly || undefined,
-          limit: 12,
+          limit: 100,
         });
 
         const industryQuery = buildQuery({
@@ -359,9 +382,12 @@ export default function InternshipExplorer() {
         const listingsQuery = buildQuery({
           school: activeFilters.school,
           company: activeFilters.company,
+          major: majorFilter || undefined,
+          class_year: classYearFilter || undefined,
           sort_by: "count",
           order: "desc",
-          limit: 8,
+          limit: LISTING_PAGE_SIZE,
+          offset: 0,
         });
 
         const [statsPayload, employersPayload, industriesPayload, listingsPayload] =
@@ -389,6 +415,9 @@ export default function InternshipExplorer() {
           setEmployers(employersPayload.data);
           setIndustries(industriesPayload.data.slice(0, 6));
           setListings(listingsPayload.data);
+          setAllListings(listingsPayload.data);
+          setListingOffset(listingsPayload.data.length);
+          setHasMoreListings((listingsPayload.meta?.total ?? 0) > listingsPayload.data.length);
           setEmployerMeta(employersPayload.meta);
           setListingMeta(listingsPayload.meta);
           setPreviewMode(false);
@@ -435,7 +464,75 @@ export default function InternshipExplorer() {
     filters.projectedOnly,
     filters.school,
     filters.year,
+    majorFilter,
+    classYearFilter,
   ]);
+
+  // Fetch listing counts for all visible employer cards
+  useEffect(() => {
+    if (!employers.length) return;
+    const seen = new Set<string>();
+    const toFetch: { company: string; school: string; key: string }[] = [];
+    for (const emp of employers) {
+      const key = `${emp.company}-${emp.school}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        toFetch.push({ company: emp.company, school: emp.school, key });
+      }
+    }
+    Promise.all(
+      toFetch.map(async ({ company, school, key }) => {
+        try {
+          const q = buildQuery({ company, school, limit: 1 });
+          const res = await fetch(`/api/internships/listings${q}`);
+          const json = await res.json();
+          return [key, json.meta?.total ?? 0] as const;
+        } catch {
+          return [key, 0] as const;
+        }
+      })
+    ).then((results) => {
+      const counts: Record<string, number> = {};
+      for (const [key, count] of results) counts[key] = count;
+      setListingCounts(counts);
+    });
+  }, [employers]);
+
+  const loadMoreListings = useCallback(async () => {
+    if (loadingMoreListings || !hasMoreListings) return;
+    setLoadingMoreListings(true);
+    try {
+      const q = buildQuery({
+        school: filters.school,
+        company: filters.company,
+        major: majorFilter || undefined,
+        class_year: classYearFilter || undefined,
+        sort_by: "count",
+        order: "desc",
+        limit: LISTING_PAGE_SIZE,
+        offset: listingOffset,
+      });
+      const res = await fetch(`/api/internships/listings${q}`);
+      const json = await res.json();
+      const newData = json.data ?? [];
+      setAllListings((prev) => [...prev, ...newData]);
+      setListingOffset((prev) => prev + newData.length);
+      setHasMoreListings(newData.length >= LISTING_PAGE_SIZE);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMoreListings(false);
+    }
+  }, [loadingMoreListings, hasMoreListings, listingOffset, filters.school, filters.company, majorFilter, classYearFilter]);
+
+  // Infinite scroll handler for listings
+  const handleListingScroll = useCallback(() => {
+    const el = listingScrollRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
+      loadMoreListings();
+    }
+  }, [loadMoreListings]);
 
   const currentLens = [
     filters.school || "All schools",
@@ -448,7 +545,7 @@ export default function InternshipExplorer() {
     {
       label: "Employer records",
       value: stats?.record_count?.toLocaleString() ?? "--",
-      tone: "from-slate-900 to-slate-800 text-white",
+      tone: "from-white to-slate-100 text-slate-900",
     },
     {
       label: "Unique companies",
@@ -462,10 +559,11 @@ export default function InternshipExplorer() {
     },
     {
       label: "Coverage window",
-      value:
+      value: filters.year || (
         stats && Number.isFinite(stats.year_range.min) && Number.isFinite(stats.year_range.max)
           ? `${stats.year_range.min} - ${stats.year_range.max}`
-          : "--",
+          : "--"
+      ),
       tone: "from-[#dbe7ff] to-white text-slate-900",
     },
   ];
@@ -514,15 +612,18 @@ export default function InternshipExplorer() {
               ))}
             </select>
 
-            <input
+            <select
               value={filters.year}
               onChange={(event) =>
                 setFilters((current) => ({ ...current, year: event.target.value }))
               }
-              inputMode="numeric"
-              placeholder="Year"
               className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#1a2a6c]"
-            />
+            >
+              <option value="">All years</option>
+              {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((y) => (
+                <option key={y} value={String(y)}>{y}</option>
+              ))}
+            </select>
 
             <select
               value={filters.dataBasis}
@@ -539,7 +640,7 @@ export default function InternshipExplorer() {
 
             <button
               type="button"
-              onClick={() => setFilters(initialFilters)}
+              onClick={() => { setFilters(initialFilters); setAllListings([]); setListingOffset(0); setHasMoreListings(true); }}
               className="rounded-2xl border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
             >
               Reset
@@ -547,20 +648,6 @@ export default function InternshipExplorer() {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-            <label className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2">
-              <input
-                type="checkbox"
-                checked={filters.projectedOnly}
-                onChange={(event) =>
-                  setFilters((current) => ({
-                    ...current,
-                    projectedOnly: event.target.checked,
-                  }))
-                }
-                className="h-4 w-4 rounded border-gray-300 text-[#1a2a6c] focus:ring-[#1a2a6c]"
-              />
-              <span>Projected compensation only</span>
-            </label>
 
             <span className="rounded-full border border-gray-300 bg-white px-3 py-2">
               {currentLens}
@@ -584,6 +671,204 @@ export default function InternshipExplorer() {
               <p className="mt-3 text-3xl font-semibold tracking-tight">{card.value}</p>
             </div>
           ))}
+        </div>
+
+        {/* Collapsible Industry & Major Breakdowns */}
+        <div className="mt-8">
+          <button
+            type="button"
+            onClick={() => setShowBreakdowns(!showBreakdowns)}
+            className="mb-4 flex w-full items-center justify-between rounded-2xl border border-gray-300 bg-white px-6 py-4 text-left shadow-sm transition hover:bg-gray-50"
+          >
+            <div>
+              <h2 className="text-2xl font-bold text-[#0d1b4b]">Industry & Major Breakdowns</h2>
+              <p className="mt-1 text-sm text-gray-500">Industry distribution and 2019 Penn internship placements by major</p>
+            </div>
+            <span className="text-xl text-gray-400">{showBreakdowns ? "▲" : "▼"}</span>
+          </button>
+
+          {showBreakdowns && (
+            <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+              <section className="rounded-[1.75rem] border border-gray-300 bg-white p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-[#0d1b4b]">Industry Breakdown</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Projected internship industry distribution by school
+                </p>
+
+                <div className="mt-6 space-y-5">
+                  {loading ? (
+                    <p className="text-sm text-gray-500">Loading industry breakdown...</p>
+                  ) : industries.length ? (
+                    industries.map((row) => (
+                      <div key={`${row.industry}-${row.school}-${row.year ?? "na"}`}>
+                        <div className="mb-2 flex items-center justify-between text-sm">
+                          <span className="font-medium text-gray-800">{row.industry}</span>
+                          <span className="text-gray-500">{formatPercent(row.percentage)}</span>
+                        </div>
+                        <div className="h-3 overflow-hidden rounded-full bg-gray-100">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#1a2a6c] to-[#4a66c7]"
+                            style={{ width: `${Math.min(row.percentage, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No industry data matches these filters.</p>
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-[1.75rem] border border-gray-300 bg-white p-6 shadow-sm">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#0d1b4b]">Major Listings</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      2019 Penn internship placements by company
+                    </p>
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {allListings.length} of {listingMeta?.total ?? 0}
+                  </span>
+                </div>
+                <select
+                  value={majorFilter}
+                  onChange={(e) => {
+                    setMajorFilter(e.target.value);
+                    setAllListings([]);
+                    setListingOffset(0);
+                    setHasMoreListings(true);
+                  }}
+                  className="mt-3 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#1a2a6c]"
+                >
+                  <option value="">All majors</option>
+                  {["Accounting","Actuarial Science","Africana Studies","Ancient History","Anthropology",
+                    "Applied Science: Biomedical Science","Applied Science: Computer Science",
+                    "Applied Science: Computer and Cognitive Science","Architecture","Behavioral Economics",
+                    "Biochemistry","Bioengineering","Biological Basis of Behavior","Biology",
+                    "Biophysics","Business Analytics","Business Economics & Public Policy",
+                    "Chemical and Biomolecular Engineering","Chemistry","Cinema and Media Studies",
+                    "Classical Studies","Cognitive Science","Communication","Comparative Literature",
+                    "Computer Engineering","Computer Science","Criminology","Digital Media Design",
+                    "Earth Sciences","East Asian Area Studies","Economics","Electrical Engineering",
+                    "English","Environmental Policy and Management","Environmental Studies",
+                    "Fine Arts","French and Francophone Studies","German","Health & Societies",
+                    "Health Care Management and Policy","Hispanic Studies","History","History of Art",
+                    "Huntsman Program in International Studies and Business","International Relations",
+                    "Jewish Studies","Latin American and Latino Studies","Legal Studies and Business Ethics",
+                    "Linguistics","Logic Information and Computation","Management",
+                    "Managing Electronic Commerce","Marketing","Marketing & Communication",
+                    "Marketing & Operations Management","Materials Science and Engineering",
+                    "Mathematical Economics","Mathematics","Mechanical Engineering and Applied Mechanics",
+                    "Modern Middle Eastern Studies","Music","Near Eastern Languages",
+                    "Near Eastern Languages & Civilization","Networked and Social Systems Engineering",
+                    "Nursing Science","Nutrition Science","Operations Information & Decisions",
+                    "Philosophy","Physics","Political Science","Psychology","Real Estate",
+                    "Religious Studies","Retailing","Russian and East European Studies",
+                    "Social Impact and Responsibility","Sociology","Statistics",
+                    "Systems Science and Engineering","Theatre Arts","Urban Studies","Visual Studies"
+                  ].map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  value={classYearFilter}
+                  onChange={(e) => {
+                    setClassYearFilter(e.target.value);
+                    setAllListings([]);
+                    setListingOffset(0);
+                    setHasMoreListings(true);
+                  }}
+                  className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#1a2a6c]"
+                >
+                  <option value="">All class years</option>
+                  <option value="Rising Senior">Rising Senior</option>
+                  <option value="Rising Junior">Rising Junior</option>
+                  <option value="Rising Sophomore">Rising Sophomore</option>
+                </select>
+
+                <div
+                  ref={listingScrollRef}
+                  onScroll={handleListingScroll}
+                  className="mt-6 space-y-4 max-h-[600px] overflow-y-auto"
+                >
+                  {loading ? (
+                    <p className="text-sm text-gray-500">Loading major listings...</p>
+                  ) : allListings.length ? (() => {
+                    // Group by company
+                    const grouped: Record<string, typeof allListings> = {};
+                    allListings.forEach((row) => {
+                      (grouped[row.company] ??= []).push(row);
+                    });
+                    return Object.entries(grouped)
+                      .sort((a, b) => b[1].reduce((s, r) => s + (r.count ?? 1), 0) - a[1].reduce((s, r) => s + (r.count ?? 1), 0))
+                      .map(([company, rows]) => {
+                        // Group roles within company by role name
+                        const byRole: Record<string, { majors: Set<string>; classYears: Set<string>; schools: Set<string>; count: number }> = {};
+                        rows.forEach((row) => {
+                          const key = row.role;
+                          if (!byRole[key]) byRole[key] = { majors: new Set(), classYears: new Set(), schools: new Set(), count: 0 };
+                          byRole[key].majors.add(row.major);
+                          if (row.class_year) byRole[key].classYears.add(row.class_year);
+                          byRole[key].schools.add(row.school);
+                          byRole[key].count += row.count ?? 1;
+                        });
+                        const totalCount = rows.reduce((sum, r) => sum + (r.count ?? 1), 0);
+
+                        return (
+                          <article
+                            key={company}
+                            className="rounded-3xl border border-gray-200 bg-gray-50 p-5"
+                          >
+                            <div className="flex items-center justify-between gap-4">
+                              <p className="text-lg font-semibold text-gray-900">{company}</p>
+                              <span className="shrink-0 rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-500">
+                                {totalCount} placements
+                              </span>
+                            </div>
+
+                            <div className="mt-4 divide-y divide-gray-200">
+                              {Object.entries(byRole)
+                                .sort((a, b) => b[1].count - a[1].count)
+                                .map(([role, info]) => (
+                                <div key={role} className="py-3 first:pt-0 last:pb-0">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-gray-800">{role}</span>
+                                    {info.count > 1 && (
+                                      <span className="text-xs text-gray-400">×{info.count}</span>
+                                    )}
+                                  </div>
+                                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                    {[...info.majors].map((m) => (
+                                      <span key={m} className="rounded-full bg-blue-50 border border-blue-100 px-2.5 py-0.5 text-xs text-blue-600">{m}</span>
+                                    ))}
+                                    {[...info.schools].map((s) => (
+                                      <span key={s} className="rounded-full bg-gray-100 border border-gray-200 px-2.5 py-0.5 text-xs text-gray-500">{s}</span>
+                                    ))}
+                                    {[...info.classYears].sort().map((cy) => (
+                                      <span key={cy} className="rounded-full bg-amber-50 border border-amber-100 px-2.5 py-0.5 text-xs text-amber-600">{cy}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </article>
+                        );
+                      });
+                  })() : (
+                    <p className="text-sm text-gray-500">No major listings match these filters.</p>
+                  )}
+                </div>
+
+                {loadingMoreListings && (
+                  <p className="mt-3 text-center text-sm text-gray-400">Loading more...</p>
+                )}
+                {!hasMoreListings && allListings.length > 0 && (
+                  <p className="mt-3 text-center text-xs text-gray-400">All listings loaded</p>
+                )}
+              </section>
+            </div>
+          )}
         </div>
 
         <div className="mt-8">
@@ -618,11 +903,6 @@ export default function InternshipExplorer() {
                         {row.year ? ` · ${row.year}` : ""}
                       </p>
                     </div>
-                    {row.levels_fyi_entries != null ? (
-                      <span className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-500 shadow-sm">
-                        {row.levels_fyi_entries} entries
-                      </span>
-                    ) : null}
                   </div>
 
                   <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-10">
@@ -656,12 +936,6 @@ export default function InternshipExplorer() {
                           : "N/A"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Data Basis</p>
-                      <p className="mt-2 text-4xl font-light text-gray-900">
-                        {formatBasis(row.data_basis)}
-                      </p>
-                    </div>
                   </div>
 
                   <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
@@ -669,14 +943,150 @@ export default function InternshipExplorer() {
                       <span className="rounded-full border border-gray-300 bg-white px-4 py-1 text-sm text-gray-500 shadow-sm">
                         {row.school}
                       </span>
-                      {row.compensation_source ? (
-                        <span className="rounded-full border border-gray-300 bg-white px-4 py-1 text-sm text-gray-500 shadow-sm">
-                          {row.compensation_source}
-                        </span>
-                      ) : null}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const key = `${row.company}-${row.school}`;
+                          if (expandedCompany === key) {
+                            setExpandedCompany(null);
+                            return;
+                          }
+                          setLoadingListings(true);
+                          setExpandedCompany(key);
+                          try {
+                            const query = buildQuery({ company: row.company, school: row.school, limit: 50 });
+                            const res = await fetch(`/api/internships/listings${query}`);
+                            const json = await res.json();
+                            setCompanyListings(json.data ?? []);
+                          } catch {
+                            setCompanyListings([]);
+                          } finally {
+                            setLoadingListings(false);
+                          }
+                        }}
+                        className="rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-sm text-blue-600 shadow-sm transition hover:bg-blue-100"
+                      >
+                        {`2019 Penn listings${listingCounts[`${row.company}-${row.school}`] != null ? ` (${listingCounts[`${row.company}-${row.school}`]})` : ""}`}
+                      </button>
+                      {row.roles && row.roles.length > 0 && !/penn/i.test(row.company) && !/university of pennsylvania/i.test(row.company) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const key = `${row.company}-${row.school}`;
+                            setExpandedLevelsFyi(expandedLevelsFyi === key ? null : key);
+                          }}
+                          className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-sm text-emerald-600 shadow-sm transition hover:bg-emerald-100"
+                        >
+                          Levels.fyi data ({row.roles.length})
+                        </button>
+                      )}
                     </div>
                     <p className="text-sm text-gray-500">{formatBasis(row.data_basis)}</p>
                   </div>
+
+                  {expandedCompany === `${row.company}-${row.school}` && (
+                    <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                      {loadingListings ? (
+                        <p className="text-sm text-gray-500">Loading...</p>
+                      ) : companyListings.length > 0 ? (() => {
+                        const byMajor: Record<string, typeof companyListings> = {};
+                        companyListings.forEach((l) => {
+                          const key = l.major || "Other";
+                          (byMajor[key] ??= []).push(l);
+                        });
+                        return (
+                          <div>
+                            <div className="space-y-4">
+                              {Object.entries(byMajor)
+                                .sort((a, b) => b[1].reduce((s, r) => s + (r.count ?? 1), 0) - a[1].reduce((s, r) => s + (r.count ?? 1), 0))
+                                .map(([major, majorListings]) => (
+                                <div key={major}>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-sm font-semibold text-gray-800">{major}</span>
+                                    <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-600">
+                                      {majorListings.length}
+                                    </span>
+                                  </div>
+                                  <div className="ml-3 space-y-1.5">
+                                    {majorListings.map((listing, i) => (
+                                      <div key={i} className="flex items-center justify-between">
+                                        <span className="text-sm text-gray-700">{listing.role}</span>
+                                        {listing.class_year && (
+                                          <span className="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-xs text-gray-500">
+                                            {listing.class_year}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })() : (
+                        <p className="text-sm text-gray-500">No Penn intern listings found for this company.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {expandedLevelsFyi === `${row.company}-${row.school}` && row.roles && (
+                    <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                      <div className="space-y-5">
+                        {/* Roles */}
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Intern roles & pay</p>
+                          <div className="space-y-2">
+                            {row.roles.map((r, i) => (
+                              <div key={i} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-800">{r.role}</span>
+                                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-500">{r.count} reports</span>
+                                </div>
+                                <span className="text-sm font-semibold text-gray-900">
+                                  ${Math.round(r.hourly_median)}/hr
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Locations */}
+                        {row.locations && row.locations.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Intern locations</p>
+                            <div className="flex flex-wrap gap-2">
+                              {row.locations.slice(0, 8).map((loc, i) => (
+                                <span key={i} className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600">
+                                  {loc}
+                                </span>
+                              ))}
+                              {row.locations.length > 8 && (
+                                <span className="text-xs text-gray-400">+{row.locations.length - 8} more</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Salary Trend */}
+                        {row.salary_trend && Object.keys(row.salary_trend).length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pay trend</p>
+                            <div className="flex flex-wrap gap-3">
+                              {Object.entries(row.salary_trend)
+                                .sort(([a], [b]) => Number(a) - Number(b))
+                                .map(([yr, val]) => (
+                                <div key={yr} className="text-center">
+                                  <p className="text-xs text-gray-400">{yr}</p>
+                                  <p className="text-sm font-semibold text-gray-800">${Math.round(Number(val))}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </article>
               ))
             ) : (
@@ -687,111 +1097,6 @@ export default function InternshipExplorer() {
           </div>
         </div>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-          <section className="rounded-[1.75rem] border border-gray-300 bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-bold text-[#0d1b4b]">Industry Breakdown</h2>
-            <p className="mt-1 text-base text-gray-500">
-              Ordered by percentage from the existing `industry_breakdown` data.
-            </p>
-
-            <div className="mt-6 space-y-5">
-              {loading ? (
-                <p className="text-sm text-gray-500">Loading industry breakdown...</p>
-              ) : industries.length ? (
-                industries.map((row) => (
-                  <div key={`${row.industry}-${row.school}-${row.year ?? "na"}`}>
-                    <div className="mb-2 flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-800">{row.industry}</span>
-                      <span className="text-gray-500">{formatPercent(row.percentage)}</span>
-                    </div>
-                    <div className="h-3 overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#1a2a6c] to-[#4a66c7]"
-                        style={{ width: `${Math.min(row.percentage, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No industry data matches these filters.</p>
-              )}
-            </div>
-
-            <div className="mt-8 grid grid-cols-3 gap-3">
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Actual</p>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {stats?.data_basis.actual ?? 0}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Inferred</p>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {stats?.data_basis.inferred ?? 0}
-                </p>
-              </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Projected</p>
-                <p className="mt-2 text-2xl font-semibold text-gray-900">
-                  {stats?.data_basis.projected ?? 0}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="rounded-[1.75rem] border border-gray-300 bg-white p-6 shadow-sm">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-[#0d1b4b]">Major Listings</h2>
-                <p className="mt-1 text-base text-gray-500">
-                  Company, role, major, school, class year, and listing count from `major_listings`.
-                </p>
-              </div>
-              <span className="text-sm text-gray-500">
-                Showing {listings.length} of {listingMeta?.total ?? 0}
-              </span>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {loading ? (
-                <p className="text-sm text-gray-500">Loading major listings...</p>
-              ) : listings.length ? (
-                listings.map((row, index) => (
-                  <article
-                    key={`${row.company}-${row.role}-${row.major}-${row.school}-${row.class_year ?? "na"}-${row.count ?? "na"}-${index}`}
-                    className="rounded-3xl border border-gray-200 bg-gray-50 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-lg font-semibold text-gray-900">{row.company}</p>
-                        <p className="mt-1 text-sm text-gray-600">{row.role}</p>
-                      </div>
-                      <span className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-500">
-                        {row.count ?? 0} listed
-                      </span>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-500">
-                        {row.major}
-                      </span>
-                      <span className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-500">
-                        {row.school}
-                      </span>
-                      {row.class_year ? (
-                        <span className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm text-gray-500">
-                          {row.class_year}
-                        </span>
-                      ) : null}
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No major listings match these filters.</p>
-              )}
-            </div>
-          </section>
-        </div>
       </div>
     </section>
   );

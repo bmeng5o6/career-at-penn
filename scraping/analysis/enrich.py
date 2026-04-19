@@ -321,13 +321,22 @@ def run() -> dict:
 
                 if levels_match:
                     total_matched += 1
+
+                    # Use year-specific hourly rate from salary_trend if available
+                    trend = levels_match.get("salary_trend", {})
+                    year_hourly = None
+                    if year and trend:
+                        year_hourly = trend.get(str(year)) or trend.get(int(year))
+                    hourly = float(year_hourly) if year_hourly else float(levels_match["hourly_median"])
+                    monthly = round(hourly * 40 * 4.33, 0)
+
                     record = {
                         "company": company,
                         "school": school,
                         "year": year,
                         "penn_intern_count": count,
-                        "hourly_median": levels_match["hourly_median"],
-                        "monthly_estimate": levels_match["monthly_estimate"],
+                        "hourly_median": hourly,
+                        "monthly_estimate": monthly,
                         "roles": levels_match["roles"],
                         "locations": levels_match["locations"],
                         "salary_trend": levels_match["salary_trend"],
