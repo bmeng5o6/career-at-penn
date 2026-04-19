@@ -223,13 +223,13 @@ function OutcomesTab() {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Year Range</p>
             <div className="flex items-center gap-2">
               <select value={yearFrom} onChange={(e) => setYearFrom(e.target.value === "" ? "" : +e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+                className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
                 <option value="">From</option>
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               <span className="text-gray-400">–</span>
               <select value={yearTo} onChange={(e) => setYearTo(e.target.value === "" ? "" : +e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+                className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
                 <option value="">To</option>
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -242,7 +242,7 @@ function OutcomesTab() {
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Metric (Trend Chart)</p>
             <select value={metric} onChange={(e) => setMetric(e.target.value as MetricKey)}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+              className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
               {METRICS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
             </select>
           </div>
@@ -428,7 +428,7 @@ function MajorInsightsTab() {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Major</p>
             <select value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)}
               disabled={loadingFilters}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c] disabled:opacity-50">
+              className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c] disabled:bg-gray-100 disabled:text-gray-500">
               <option value="">Select a major…</option>
               {majors.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
@@ -438,7 +438,7 @@ function MajorInsightsTab() {
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Company</p>
             <select value={selectedCompany} onChange={(e) => setSelectedCompany(e.target.value)}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+              className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
               <option value="">All companies</option>
               {companies.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -493,7 +493,13 @@ function MajorInsightsTab() {
                   <YAxis type="category" dataKey="name" width={160}
                     tick={{ fontSize: 10, fill: "#6b7280" }}
                     tickFormatter={(v: string) => v.length > 22 ? v.slice(0, 22) + "…" : v} />
-                  <Tooltip formatter={(v) => [v, "Listings"]} labelFormatter={(l) => l} />
+                  <Tooltip
+                    formatter={(v) => [v, "Listings"]}
+                    labelFormatter={(l) => l}
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+                    labelStyle={{ color: "#4b5563" }}
+                    itemStyle={{ color: "#1a2a6c" }}
+                  />
                   <Bar dataKey="count" fill={MAJOR_BAR_COLOR} radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -514,7 +520,12 @@ function MajorInsightsTab() {
                   <YAxis type="category" dataKey="name" width={160}
                     tick={{ fontSize: 10, fill: "#6b7280" }}
                     tickFormatter={(v: string) => v.length > 22 ? v.slice(0, 22) + "…" : v} />
-                  <Tooltip formatter={(v) => [v, "Listings"]} />
+                  <Tooltip
+                    formatter={(v) => [v, "Listings"]}
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+                    labelStyle={{ color: "#4b5563" }}
+                    itemStyle={{ color: "#2a9d8f" }}
+                  />
                   <Bar dataKey="count" fill="#2a9d8f" radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -530,7 +541,12 @@ function MajorInsightsTab() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6b7280" }} />
                 <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} width={36} />
-                <Tooltip formatter={(v) => [v, "Listings"]} />
+                <Tooltip
+                  formatter={(v) => [v, "Listings"]}
+                  contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+                  labelStyle={{ color: "#4b5563" }}
+                  itemStyle={{ color: "#c65d3d" }}
+                />
                 <Bar dataKey="count" fill="#e76f51" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

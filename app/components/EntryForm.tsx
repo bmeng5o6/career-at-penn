@@ -9,7 +9,7 @@ const MAJORS  = ["CIS", "Math", "Finance", "Economics", "Biology", "Political Sc
 const YEARS   = ["2026", "2027", "2028", "2029", "2030"];
 
 const selectClassName =
-  "w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]";
+  "w-full text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]";
 
 export default function EntryForm() {
   const router = useRouter();
@@ -53,7 +53,7 @@ export default function EntryForm() {
     if (!res.ok) {
       console.error("Submit failed:", json.error);
     } else {
-      router.push("/");
+      router.push("/internship");
     }
 
     setLoading(false);
@@ -61,8 +61,6 @@ export default function EntryForm() {
 
   return (
     <section className="bg-gray-100 py-12 px-8">
-      <p className="text-purple-500 text-sm font-medium mb-4 max-w-xl mx-auto">✦ Entry Form</p>
-
       <div className="bg-white border border-gray-200 rounded-xl p-7 max-w-xl mx-auto">
         <h3 className="text-purple-600 font-medium mb-5">Tell us about yourself</h3>
 
@@ -73,7 +71,7 @@ export default function EntryForm() {
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Jane Smith"
-            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]"
+            className="w-full text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]"
           />
         </div>
 
@@ -83,7 +81,7 @@ export default function EntryForm() {
           <div className="relative" ref={schoolRef}>
             <label className="block text-sm text-gray-500 mb-1">School (up to 2)</label>
             <div
-              className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 cursor-pointer flex justify-between items-center"
+              className="w-full text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 cursor-pointer flex justify-between items-center"
               onClick={() => setSchoolOpen(!schoolOpen)}
             >
               <span className={schools.length ? "text-gray-900" : "text-gray-400"}>
@@ -99,7 +97,7 @@ export default function EntryForm() {
                   return (
                     <label
                       key={o}
-                      className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm text-gray-900 cursor-pointer hover:bg-gray-50 ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
                     >
                       <input
                         type="checkbox"
@@ -150,7 +148,7 @@ export default function EntryForm() {
             value={clubs}
             onChange={e => setClubs(e.target.value)}
             placeholder="e.g. Penn Labs, Wharton Investment Club..."
-            className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]"
+            className="w-full text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]"
           />
         </div>
 

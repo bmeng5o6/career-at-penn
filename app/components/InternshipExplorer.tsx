@@ -556,7 +556,7 @@ export default function InternshipExplorer() {
     {
       label: "Employer records",
       value: stats?.record_count?.toLocaleString() ?? "--",
-      tone: "from-white to-slate-100 text-slate-900",
+      tone: "from-slate-900 to-slate-800 text-black",
     },
     {
       label: "Unique companies",
