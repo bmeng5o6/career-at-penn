@@ -223,13 +223,13 @@ function OutcomesTab() {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Year Range</p>
             <div className="flex items-center gap-2">
               <select value={yearFrom} onChange={(e) => setYearFrom(e.target.value === "" ? "" : +e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+                className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
                 <option value="">From</option>
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
               <span className="text-gray-400">–</span>
               <select value={yearTo} onChange={(e) => setYearTo(e.target.value === "" ? "" : +e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+                className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
                 <option value="">To</option>
                 {years.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -242,7 +242,7 @@ function OutcomesTab() {
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Metric (Trend Chart)</p>
             <select value={metric} onChange={(e) => setMetric(e.target.value as MetricKey)}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+              className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
               {METRICS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
             </select>
           </div>
@@ -428,7 +428,7 @@ function MajorInsightsTab() {
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Major</p>
             <select value={selectedMajor} onChange={(e) => setSelectedMajor(e.target.value)}
               disabled={loadingFilters}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c] disabled:opacity-50">
+              className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c] disabled:bg-gray-100 disabled:text-gray-500">
               <option value="">Select a major…</option>
               {majors.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
@@ -438,7 +438,7 @@ function MajorInsightsTab() {
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Company</p>
             <select value={selectedCompany} onChange={(e) => setSelectedCompany(e.target.value)}
-              className="text-sm border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
+              className="text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-1.5 bg-gray-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]">
               <option value="">All companies</option>
               {companies.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
