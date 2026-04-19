@@ -26,6 +26,7 @@ type RoleEntry = { role: string; hourly_median: number; count: number };
 type EmployerRow = {
   company: string;
   school: string;
+  industry: string | null;
   year: number | null;
   penn_intern_count: number | null;
   hourly_median: number | null;
@@ -66,6 +67,8 @@ type Filters = {
   school: string;
   year: string;
   company: string;
+  industry: string;
+  sortBy: string;
   dataBasis: string;
   projectedOnly: boolean;
 };
@@ -99,7 +102,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "levels.fyi",
     data_basis: "actual",
     levels_fyi_entries: 100,
-    roles: null, locations: null, salary_trend: null,
+    industry: null, roles: null, locations: null, salary_trend: null,
   },
   {
     company: "Citadel Securities",
@@ -111,7 +114,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "levels.fyi",
     data_basis: "actual",
     levels_fyi_entries: 100,
-    roles: null, locations: null, salary_trend: null,
+    industry: null, roles: null, locations: null, salary_trend: null,
   },
   {
     company: "Comcast",
@@ -123,7 +126,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "inferred",
     data_basis: "inferred",
     levels_fyi_entries: null,
-    roles: null, locations: null, salary_trend: null,
+    industry: null, roles: null, locations: null, salary_trend: null,
   },
   {
     company: "CHOP",
@@ -135,7 +138,7 @@ const PREVIEW_EMPLOYERS: EmployerRow[] = [
     compensation_source: "projected",
     data_basis: "projected",
     levels_fyi_entries: null,
-    roles: null, locations: null, salary_trend: null,
+    industry: null, roles: null, locations: null, salary_trend: null,
   },
 ];
 
@@ -187,6 +190,8 @@ const initialFilters: Filters = {
   school: "",
   year: "2026",
   company: "",
+  industry: "",
+  sortBy: "penn_intern_count:desc",
   dataBasis: "",
   projectedOnly: false,
 };
@@ -355,6 +360,7 @@ export default function InternshipExplorer() {
         school: filters.school,
         year: filters.year,
         company: deferredCompany.trim(),
+        industry: filters.industry,
         dataBasis: filters.dataBasis,
         projectedOnly: filters.projectedOnly,
       };
@@ -368,6 +374,9 @@ export default function InternshipExplorer() {
           school: activeFilters.school,
           year: activeFilters.year,
           company: activeFilters.company,
+          industry: activeFilters.industry,
+          sort_by: filters.sortBy.split(":")[0],
+          order: filters.sortBy.split(":")[1] || "desc",
           data_basis: activeFilters.dataBasis,
           is_projected: activeFilters.projectedOnly || undefined,
           limit: 100,
@@ -463,6 +472,8 @@ export default function InternshipExplorer() {
     filters.dataBasis,
     filters.projectedOnly,
     filters.school,
+    filters.industry,
+    filters.sortBy,
     filters.year,
     majorFilter,
     classYearFilter,
@@ -587,7 +598,7 @@ export default function InternshipExplorer() {
         </div>
 
         <div className="rounded-[1.75rem] border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.15fr_0.9fr_0.9fr_0.9fr_auto]">
+          <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-[1.4fr_1fr_0.6fr_1fr_1fr_0.8fr_auto]">
             <input
               value={filters.company}
               onChange={(event) =>
@@ -622,6 +633,37 @@ export default function InternshipExplorer() {
               {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((y) => (
                 <option key={y} value={String(y)}>{y}</option>
               ))}
+            </select>
+
+            <select
+              value={filters.industry}
+              onChange={(event) =>
+                setFilters((current) => ({ ...current, industry: event.target.value }))
+              }
+              className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#1a2a6c]"
+            >
+              <option value="">All industries</option>
+              <option value="Technology">Technology</option>
+              <option value="Financial Services">Financial Services</option>
+              <option value="Consulting">Consulting</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Education">Education</option>
+              <option value="Nonprofit">Nonprofit</option>
+              <option value="Media/Journalism/Entertainment">Media/Entertainment</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <select
+              value={filters.sortBy}
+              onChange={(event) =>
+                setFilters((current) => ({ ...current, sortBy: event.target.value }))
+              }
+              className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#1a2a6c]"
+            >
+              <option value="penn_intern_count:desc">Penn Interns ↓</option>
+              <option value="penn_intern_count:asc">Penn Interns ↑</option>
+              <option value="hourly_median:desc">Hourly Estimate ↓</option>
+              <option value="hourly_median:asc">Hourly Estimate ↑</option>
             </select>
 
             <select
@@ -674,17 +716,16 @@ export default function InternshipExplorer() {
 
         {/* Collapsible Industry & Major Breakdowns */}
         <div className="mt-8">
-          <button
-            type="button"
-            onClick={() => setShowBreakdowns(!showBreakdowns)}
-            className="mb-4 flex w-full items-center justify-between rounded-2xl border border-gray-300 bg-white px-6 py-4 text-left shadow-sm transition hover:bg-gray-50"
-          >
-            <div>
-              <h2 className="text-2xl font-bold text-[#0d1b4b]">Industry & Major Breakdowns</h2>
-              <p className="mt-1 text-sm text-gray-500">Industry distribution and 2019 Penn internship placements by major</p>
-            </div>
-            <span className="text-xl text-gray-400">{showBreakdowns ? "▲" : "▼"}</span>
-          </button>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-[#0d1b4b]">Industry & Major Breakdowns</h2>
+            <button
+              type="button"
+              onClick={() => setShowBreakdowns(!showBreakdowns)}
+              className={`rounded-2xl border px-4 py-2 text-sm font-medium transition ${showBreakdowns ? "border-gray-300 bg-white text-gray-700 hover:bg-gray-50" : "border-[#1a2a6c] bg-[#1a2a6c] text-white hover:bg-[#253a8e]"}`}
+            >
+              {showBreakdowns ? "Collapse" : "Expand"}
+            </button>
+          </div>
 
           {showBreakdowns && (
             <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
@@ -899,6 +940,7 @@ export default function InternshipExplorer() {
                       <h3 className="text-2xl font-semibold text-gray-900">{row.company}</h3>
                       <p className="mt-1 text-lg text-gray-500">
                         {row.school}
+                        {row.industry ? ` · ${row.industry}` : ""}
                         {row.year ? ` · ${row.year}` : ""}
                       </p>
                     </div>
@@ -925,11 +967,16 @@ export default function InternshipExplorer() {
                     </div>
                   </div>
 
-                  <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+                  <div className="mt-8 space-y-2">
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full border border-gray-300 bg-white px-4 py-1 text-sm text-gray-500 shadow-sm">
+                      <span className="shrink-0 rounded-full border border-gray-300 bg-white px-4 py-1 text-sm text-gray-500 shadow-sm">
                         {row.school}
                       </span>
+                      {row.industry && (
+                        <span className="shrink-0 rounded-full border border-purple-200 bg-purple-50 px-4 py-1 text-sm text-purple-600 shadow-sm">
+                          {row.industry}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={async () => {
@@ -951,7 +998,7 @@ export default function InternshipExplorer() {
                             setLoadingListings(false);
                           }
                         }}
-                        className="rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-sm text-blue-600 shadow-sm transition hover:bg-blue-100"
+                        className="shrink-0 whitespace-nowrap rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-sm text-blue-600 shadow-sm transition hover:bg-blue-100"
                       >
                         {`2019 Penn listings${listingCounts[`${row.company}-${row.school}`] != null ? ` (${listingCounts[`${row.company}-${row.school}`]})` : ""}`}
                       </button>
@@ -962,13 +1009,13 @@ export default function InternshipExplorer() {
                             const key = `${row.company}-${row.school}`;
                             setExpandedLevelsFyi(expandedLevelsFyi === key ? null : key);
                           }}
-                          className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-sm text-emerald-600 shadow-sm transition hover:bg-emerald-100"
+                          className="shrink-0 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-sm text-emerald-600 shadow-sm transition hover:bg-emerald-100"
                         >
-                          Levels.fyi data ({row.roles.length})
+                          Levels.fyi ({row.roles.length})
                         </button>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500">{formatBasis(row.data_basis)}</p>
+                    <p className="text-sm text-gray-500 text-right">{formatBasis(row.data_basis)}</p>
                   </div>
 
                   {expandedCompany === `${row.company}-${row.school}` && (

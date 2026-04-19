@@ -23,7 +23,7 @@ from rapidfuzz import fuzz, process
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import COMPANY_ALIASES
+from config import COMPANY_ALIASES, COMPANY_INDUSTRIES
 from db import export_json
 from utils import normalize_company
 
@@ -333,6 +333,7 @@ def run() -> dict:
                     record = {
                         "company": company,
                         "school": school,
+                        "industry": COMPANY_INDUSTRIES.get(company, "Other"),
                         "year": year,
                         "penn_intern_count": count,
                         "hourly_median": hourly,
@@ -351,6 +352,7 @@ def run() -> dict:
                     record = {
                         "company": company,
                         "school": school,
+                        "industry": COMPANY_INDUSTRIES.get(company, "Other"),
                         "year": year,
                         "penn_intern_count": count,
                         "hourly_median": industry_medians["median_hourly"],
@@ -436,6 +438,7 @@ def _export_supabase_json(enriched: dict, major_listings: list, projected: dict,
             employer_rows.append({
                 "company": r["company"],
                 "school": r["school"],
+                "industry": r.get("industry"),
                 "year": r.get("year"),
                 "penn_intern_count": r.get("penn_intern_count"),
                 "hourly_median": float(r["hourly_median"]) if r.get("hourly_median") else None,

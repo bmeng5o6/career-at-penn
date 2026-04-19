@@ -10,6 +10,7 @@ const ALLOWED_SORT_COLUMNS = [
   "monthly_estimate",
   "levels_fyi_entries",
   "data_basis",
+  "industry",
 ];
 
 export async function GET(request: NextRequest) {
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
     const school = searchParams.get("school");
     const year = searchParams.get("year");
     const company = searchParams.get("company");
+    const industry = searchParams.get("industry");
     const dataSource = searchParams.get("compensation_source");
     const isProjected = searchParams.get("is_projected");
     const dataBasis = searchParams.get("data_basis");
@@ -43,6 +45,7 @@ export async function GET(request: NextRequest) {
     if (school) query = query.ilike("school", school);
     if (year) query = query.eq("year", parseInt(year));
     if (company) query = query.ilike("company", `%${company}%`);
+    if (industry) query = query.ilike("industry", industry);
     if (dataSource) query = query.eq("compensation_source", dataSource);
     if (isProjected) query = query.eq("is_projected", isProjected === "true");
     if (dataBasis) query = query.eq("data_basis", dataBasis);
