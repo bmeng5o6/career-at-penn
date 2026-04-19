@@ -493,7 +493,13 @@ function MajorInsightsTab() {
                   <YAxis type="category" dataKey="name" width={160}
                     tick={{ fontSize: 10, fill: "#6b7280" }}
                     tickFormatter={(v: string) => v.length > 22 ? v.slice(0, 22) + "…" : v} />
-                  <Tooltip formatter={(v) => [v, "Listings"]} labelFormatter={(l) => l} />
+                  <Tooltip
+                    formatter={(v) => [v, "Listings"]}
+                    labelFormatter={(l) => l}
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+                    labelStyle={{ color: "#4b5563" }}
+                    itemStyle={{ color: "#1a2a6c" }}
+                  />
                   <Bar dataKey="count" fill={MAJOR_BAR_COLOR} radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -514,7 +520,12 @@ function MajorInsightsTab() {
                   <YAxis type="category" dataKey="name" width={160}
                     tick={{ fontSize: 10, fill: "#6b7280" }}
                     tickFormatter={(v: string) => v.length > 22 ? v.slice(0, 22) + "…" : v} />
-                  <Tooltip formatter={(v) => [v, "Listings"]} />
+                  <Tooltip
+                    formatter={(v) => [v, "Listings"]}
+                    contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+                    labelStyle={{ color: "#4b5563" }}
+                    itemStyle={{ color: "#2a9d8f" }}
+                  />
                   <Bar dataKey="count" fill="#2a9d8f" radius={[0, 3, 3, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -530,7 +541,12 @@ function MajorInsightsTab() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6b7280" }} />
                 <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} width={36} />
-                <Tooltip formatter={(v) => [v, "Listings"]} />
+                <Tooltip
+                  formatter={(v) => [v, "Listings"]}
+                  contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #e5e7eb" }}
+                  labelStyle={{ color: "#4b5563" }}
+                  itemStyle={{ color: "#c65d3d" }}
+                />
                 <Bar dataKey="count" fill="#e76f51" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
