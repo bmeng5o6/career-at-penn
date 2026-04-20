@@ -23,7 +23,7 @@ from rapidfuzz import fuzz, process
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from config import COMPANY_ALIASES
+from config import COMPANY_ALIASES, COMPANY_INDUSTRIES
 from db import export_json
 from utils import normalize_company
 
@@ -321,13 +321,23 @@ def run() -> dict:
 
                 if levels_match:
                     total_matched += 1
+
+                    # Use year-specific hourly rate from salary_trend if available
+                    trend = levels_match.get("salary_trend", {})
+                    year_hourly = None
+                    if year and trend:
+                        year_hourly = trend.get(str(year)) or trend.get(int(year))
+                    hourly = float(year_hourly) if year_hourly else float(levels_match["hourly_median"])
+                    monthly = round(hourly * 40 * 4.33, 0)
+
                     record = {
                         "company": company,
                         "school": school,
+                        "industry": COMPANY_INDUSTRIES.get(company, "Other"),
                         "year": year,
                         "penn_intern_count": count,
-                        "hourly_median": levels_match["hourly_median"],
-                        "monthly_estimate": levels_match["monthly_estimate"],
+                        "hourly_median": hourly,
+                        "monthly_estimate": monthly,
                         "roles": levels_match["roles"],
                         "locations": levels_match["locations"],
                         "salary_trend": levels_match["salary_trend"],
@@ -342,6 +352,7 @@ def run() -> dict:
                     record = {
                         "company": company,
                         "school": school,
+                        "industry": COMPANY_INDUSTRIES.get(company, "Other"),
                         "year": year,
                         "penn_intern_count": count,
                         "hourly_median": industry_medians["median_hourly"],
@@ -427,6 +438,7 @@ def _export_supabase_json(enriched: dict, major_listings: list, projected: dict,
             employer_rows.append({
                 "company": r["company"],
                 "school": r["school"],
+                "industry": r.get("industry"),
                 "year": r.get("year"),
                 "penn_intern_count": r.get("penn_intern_count"),
                 "hourly_median": float(r["hourly_median"]) if r.get("hourly_median") else None,

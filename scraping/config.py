@@ -326,3 +326,64 @@ INDUSTRY_OFFSETS: dict[str, float] = {
 # ============================================================
 
 COVID_EXCLUSION_YEARS = {2020, 2021}
+
+# ============================================================
+# Company → Industry mapping
+# ============================================================
+
+COMPANY_INDUSTRIES: dict[str, str] = {
+    # Technology
+    "Google": "Technology",
+    "Meta": "Technology",
+    "Microsoft": "Technology",
+    "Amazon": "Technology",
+    "Apple": "Technology",
+    "IBM": "Technology",
+    "Comcast": "Technology",
+    # Financial Services
+    "Goldman Sachs": "Financial Services",
+    "JPMorgan Chase & Co.": "Financial Services",
+    "Morgan Stanley": "Financial Services",
+    "Bank of America": "Financial Services",
+    "Citi": "Financial Services",
+    "Credit Suisse": "Financial Services",
+    "Deutsche Bank": "Financial Services",
+    "Wells Fargo": "Financial Services",
+    "Capital One": "Financial Services",
+    "Blackstone": "Financial Services",
+    "Evercore": "Financial Services",
+    "Citadel and Citadel Securities": "Financial Services",
+    "Five Rings": "Financial Services",
+    "Susquehanna International Group (SIG)": "Financial Services",
+    # Consulting
+    "McKinsey & Company": "Consulting",
+    "Boston Consulting Group": "Consulting",
+    "Bain & Company": "Consulting",
+    "Deloitte": "Consulting",
+    "Accenture": "Consulting",
+    "EY": "Consulting",
+    "PricewaterhouseCoopers (PwC)": "Consulting",
+    "Gartner": "Consulting",
+    # Healthcare
+    "Children's Hospital of Philadelphia (CHOP)": "Healthcare",
+    "Penn Medicine": "Healthcare",
+    "Hospital of Philadelphia": "Healthcare",
+    "Healthcare NYU Langone Medical Center": "Healthcare",
+    "Jefferson Health": "Healthcare",
+    "Northwestern Medicine": "Healthcare",
+    "Seattle Children's": "Healthcare",
+    "Yale New Haven Hospital": "Healthcare",
+    "University of Pennsylvania Health System": "Healthcare",
+    "Pfizer": "Healthcare",
+    # Education
+    "University of Pennsylvania": "Education",
+    "Teach For America": "Education",
+    # Nonprofit
+    "Ashoka": "Nonprofit",
+    "Bridging the Gaps": "Nonprofit",
+    "YMCA": "Nonprofit",
+    # Media / Other
+    "FactCheck.org": "Media/Journalism/Entertainment",
+    "Institute for Contemporary Art": "Other",
+    "Center": "Other",
+}
