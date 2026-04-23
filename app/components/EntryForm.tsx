@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 const SCHOOLS = ["SEAS", "Wharton", "CAS", "Nursing"];
 const MAJORS  = ["CIS", "Math", "Finance", "Economics", "Biology", "Political Science"];
@@ -13,21 +12,37 @@ const selectClassName =
 
 export default function EntryForm() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [name, setName] = useState("");
   const [schoolPrimary, setSchoolPrimary] = useState("");
   const [schoolSecondary, setSchoolSecondary] = useState("");
   const [schoolOpen, setSchoolOpen] = useState(false);
-  const [major, setMajor] = useState(MAJORS[0]);
-  const [year, setYear] = useState(YEARS[0]);
+  const [major, setMajor] = useState("");
+  const [year, setYear] = useState("");
   const [clubs, setClubs] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   const schoolRef = useRef<HTMLDivElement>(null);
 
   const schools = [...new Set([schoolPrimary, schoolSecondary].filter(Boolean))];
   const schoolForDb = schools.join(", ");
+
+  // If user already has a profile, skip this form
+  useEffect(() => {
+    async function check() {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.id !== null) {
+          router.replace("/internship");
+          return;
+        }
+      }
+      setChecking(false);
+    }
+    check();
+  }, [router]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -59,6 +74,8 @@ export default function EntryForm() {
     setLoading(false);
   }
 
+  if (checking) return null;
+
   return (
     <section className="bg-gray-100 py-12 px-8">
       <div className="bg-white border border-gray-200 rounded-xl p-7 max-w-xl mx-auto">
@@ -76,8 +93,6 @@ export default function EntryForm() {
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-5">
-
-          {/* School checkbox dropdown */}
           <div className="relative" ref={schoolRef}>
             <label className="block text-sm text-gray-500 mb-1">School (up to 2)</label>
             <div
@@ -122,24 +137,21 @@ export default function EntryForm() {
             )}
           </div>
 
-          {/* Major + Class Year */}
-          {[
-            { label: "Major", value: major, set: setMajor, opts: MAJORS },
-            { label: "Class Year", value: year, set: setYear, opts: YEARS },
-          ].map(({ label, value, set, opts }) => (
-            <div key={label}>
-              <label className="block text-sm text-gray-500 mb-1">{label}</label>
-              <select
-                value={value}
-                onChange={(e) => set(e.target.value)}
-                className={selectClassName}
-              >
-                {opts.map((o) => (
-                  <option key={o} value={o}>{o}</option>
-                ))}
-              </select>
-            </div>
-          ))}
+          <div>
+            <label className="block text-sm text-gray-500 mb-1">Major</label>
+            <select value={major} onChange={(e) => setMajor(e.target.value)} className={selectClassName}>
+              <option value="">Select major</option>
+              {MAJORS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-500 mb-1">Class Year</label>
+            <select value={year} onChange={(e) => setYear(e.target.value)} className={selectClassName}>
+              <option value="">Select year</option>
+              {YEARS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
         </div>
 
         <div className="mb-5">
