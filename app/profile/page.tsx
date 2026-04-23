@@ -8,9 +8,10 @@ const MAJORS = ["CIS", "Math", "Finance", "Economics", "Biology", "Political Sci
 const YEARS = ["2026", "2027", "2028", "2029", "2030"];
 
 const inputClassName =
-  "w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]";
+  "w-full text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]";
 
 type ProfileData = {
+  id: number | null;
   name: string;
   school: string;
   major: string;
@@ -20,6 +21,7 @@ type ProfileData = {
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData>({
+    id: null,
     name: "",
     school: "",
     major: MAJORS[0],
@@ -54,13 +56,15 @@ export default function ProfilePage() {
     async function loadProfile() {
       try {
         const res = await fetch("/api/user", { method: "GET" });
-        const json = await res.json();
+        const text = await res.text();
+        const json = text ? JSON.parse(text) : {};
 
         if (!res.ok) {
           throw new Error(json.error || "Failed to load profile");
         }
 
         setProfile({
+          id: json.id ?? null,
           name: json.name ?? "",
           school: json.school ?? "",
           major: json.major ?? MAJORS[0],
@@ -103,10 +107,12 @@ export default function ProfilePage() {
     setMessage("");
 
     try {
+      const isNew = profile.id === null;
       const res = await fetch("/api/user", {
-        method: "PUT",
+        method: isNew ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          id: profile.id,
           name: profile.name,
           school: profile.school,
           major: profile.major,
@@ -115,10 +121,14 @@ export default function ProfilePage() {
         }),
       });
 
-      const json = await res.json();
+      const text = await res.text();
+      const json = text ? JSON.parse(text) : {};
 
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to update profile");
+      if (!res.ok) throw new Error(json.error || "Failed to update profile");
+
+      // Store the new id so subsequent saves use PUT
+      if (isNew && json.data?.[0]?.id) {
+        setProfile((prev) => ({ ...prev, id: json.data[0].id }));
       }
 
       setMessage("Profile updated successfully.");
@@ -162,7 +172,7 @@ export default function ProfilePage() {
                 <div className="relative" ref={schoolRef}>
                   <label className="block text-sm text-gray-500 mb-1">School (up to 2)</label>
                   <div
-                    className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 cursor-pointer flex justify-between items-center"
+                    className="w-full text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 cursor-pointer flex justify-between items-center"
                     onClick={() => setSchoolOpen((prev) => !prev)}
                   >
                     <span className={selectedSchools.length ? "text-gray-900" : "text-gray-400"}>
@@ -180,8 +190,10 @@ export default function ProfilePage() {
                         return (
                           <label
                             key={school}
-                            className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${
-                              disabled ? "opacity-40 cursor-not-allowed" : ""
+                            className={`flex items-center gap-2 px-3 py-2 text-sm ${
+                              disabled
+                                ? "text-gray-400 opacity-60 cursor-not-allowed"
+                                : "text-gray-900 cursor-pointer hover:bg-gray-50"
                             }`}
                           >
                             <input
@@ -189,6 +201,7 @@ export default function ProfilePage() {
                               checked={checked}
                               disabled={disabled}
                               onChange={() => toggleSchool(school)}
+                              className="h-4 w-4 rounded border-gray-300 text-[#1a2a6c] focus:ring-[#1a2a6c]"
                             />
                             {school}
                           </label>
@@ -234,8 +247,8 @@ export default function ProfilePage() {
                 <textarea
                   value={profile.clubs}
                   onChange={(e) => updateField("clubs", e.target.value)}
-                  placeholder="e.g. Penn Labs, Wharton Investment Club..."
-                  className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-gray-50 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]"
+                  placeholder="e.g. Penn Spark, WITG..."
+                  className="w-full text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 h-28 resize-none focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]"
                 />
               </div>
 
@@ -248,9 +261,7 @@ export default function ProfilePage() {
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
 
-                {message && (
-                  <p className="text-sm text-gray-500">{message}</p>
-                )}
+                {message && <p className="text-sm text-gray-500">{message}</p>}
               </div>
             </>
           )}
