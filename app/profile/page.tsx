@@ -24,8 +24,8 @@ export default function ProfilePage() {
     id: null,
     name: "",
     school: "",
-    major: MAJORS[0],
-    class_year: YEARS[0],
+    major: "",
+    class_year: "",
     clubs: "",
   });
 
@@ -47,7 +47,6 @@ export default function ProfilePage() {
         setSchoolOpen(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -55,20 +54,17 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const res = await fetch("/api/user", { method: "GET" });
-        const text = await res.text();
-        const json = text ? JSON.parse(text) : {};
+        const res = await fetch("/api/user");
+        const json = await res.json();
 
-        if (!res.ok) {
-          throw new Error(json.error || "Failed to load profile");
-        }
+        if (!res.ok) throw new Error(json.error || "Failed to load profile");
 
         setProfile({
           id: json.id ?? null,
           name: json.name ?? "",
           school: json.school ?? "",
-          major: json.major ?? MAJORS[0],
-          class_year: String(json.class_year ?? YEARS[0]),
+          major: json.major ?? "",
+          class_year: json.class_year ?? "",
           clubs: json.clubs ?? "",
         });
       } catch (err) {
@@ -78,7 +74,6 @@ export default function ProfilePage() {
         setLoading(false);
       }
     }
-
     loadProfile();
   }, []);
 
@@ -87,19 +82,14 @@ export default function ProfilePage() {
   }
 
   function toggleSchool(school: string) {
-    const schools = [...selectedSchools];
-    const exists = schools.includes(school);
-
-    let nextSchools: string[];
-
+    const current = [...selectedSchools];
+    const exists = current.includes(school);
     if (exists) {
-      nextSchools = schools.filter((s) => s !== school);
+      updateField("school", current.filter((s) => s !== school).join(", "));
     } else {
-      if (schools.length >= 2) return;
-      nextSchools = [...schools, school];
+      if (current.length >= 2) return;
+      updateField("school", [...current, school].join(", "));
     }
-
-    updateField("school", nextSchools.join(", "));
   }
 
   async function handleSave() {
@@ -121,12 +111,9 @@ export default function ProfilePage() {
         }),
       });
 
-      const text = await res.text();
-      const json = text ? JSON.parse(text) : {};
-
+      const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to update profile");
 
-      // Store the new id so subsequent saves use PUT
       if (isNew && json.data?.[0]?.id) {
         setProfile((prev) => ({ ...prev, id: json.data[0].id }));
       }
@@ -143,13 +130,10 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <Navbar />
-
       <div className="max-w-3xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Your Profile</h1>
-          <p className="text-gray-500 mt-1">
-            Update your academic background and campus involvement.
-          </p>
+          <p className="text-gray-500 mt-1">Update your academic background and campus involvement.</p>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-7 shadow-sm">
@@ -180,20 +164,16 @@ export default function ProfilePage() {
                     </span>
                     <span className="text-gray-400 text-xs">{schoolOpen ? "▲" : "▼"}</span>
                   </div>
-
                   {schoolOpen && (
                     <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-md mt-1">
                       {SCHOOLS.map((school) => {
                         const checked = selectedSchools.includes(school);
                         const disabled = !checked && selectedSchools.length >= 2;
-
                         return (
                           <label
                             key={school}
                             className={`flex items-center gap-2 px-3 py-2 text-sm ${
-                              disabled
-                                ? "text-gray-400 opacity-60 cursor-not-allowed"
-                                : "text-gray-900 cursor-pointer hover:bg-gray-50"
+                              disabled ? "text-gray-400 opacity-60 cursor-not-allowed" : "text-gray-900 cursor-pointer hover:bg-gray-50"
                             }`}
                           >
                             <input
@@ -213,31 +193,17 @@ export default function ProfilePage() {
 
                 <div>
                   <label className="block text-sm text-gray-500 mb-1">Major</label>
-                  <select
-                    value={profile.major}
-                    onChange={(e) => updateField("major", e.target.value)}
-                    className={inputClassName}
-                  >
-                    {MAJORS.map((major) => (
-                      <option key={major} value={major}>
-                        {major}
-                      </option>
-                    ))}
+                  <select value={profile.major} onChange={(e) => updateField("major", e.target.value)} className={inputClassName}>
+                    <option value="">Select major</option>
+                    {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-500 mb-1">Class Year</label>
-                  <select
-                    value={profile.class_year}
-                    onChange={(e) => updateField("class_year", e.target.value)}
-                    className={inputClassName}
-                  >
-                    {YEARS.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
+                  <select value={profile.class_year} onChange={(e) => updateField("class_year", e.target.value)} className={inputClassName}>
+                    <option value="">Select year</option>
+                    {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
               </div>
@@ -260,7 +226,6 @@ export default function ProfilePage() {
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
-
                 {message && <p className="text-sm text-gray-500">{message}</p>}
               </div>
             </>
