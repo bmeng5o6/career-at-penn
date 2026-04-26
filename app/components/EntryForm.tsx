@@ -28,16 +28,21 @@ export default function EntryForm() {
   const schools = [...new Set([schoolPrimary, schoolSecondary].filter(Boolean))];
   const schoolForDb = schools.join(", ");
 
-  // If user already has a profile, skip this form
+  // If authenticated user already has a saved profile, skip this form
   useEffect(() => {
     async function check() {
-      const res = await fetch("/api/user");
-      if (res.ok) {
-        const json = await res.json();
-        if (json.id !== null) {
-          router.replace("/internship");
-          return;
+      try {
+        const res = await fetch("/api/user");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.id !== null) {
+            router.replace("/internship");
+            return;
+          }
         }
+        // 401 = not logged in, or no profile yet — either way, show the form
+      } catch {
+        // network error — show form anyway
       }
       setChecking(false);
     }
@@ -57,20 +62,23 @@ export default function EntryForm() {
   async function handleSubmit() {
     setLoading(true);
 
-    const res = await fetch("/api/user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, school: schoolForDb, major, class_year: year, clubs }),
-    });
+    const profile = { name, school: schoolForDb, major, class_year: year, clubs };
 
-    const json = await res.json();
+    // Always cache locally — used by /internship for both guests and logged-in users
+    localStorage.setItem("guestProfile", JSON.stringify(profile));
 
-    if (!res.ok) {
-      console.error("Submit failed:", json.error);
-    } else {
-      router.push("/internship");
+    // Attempt to persist to DB if the user is logged in; ignore failures silently
+    try {
+      await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(profile),
+      });
+    } catch {
+      // not logged in or network error — guest flow, just continue
     }
 
+    router.push("/internship");
     setLoading(false);
   }
 
