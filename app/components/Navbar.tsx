@@ -1,10 +1,8 @@
 export default function Navbar() {
   return (
     <nav className="flex items-center justify-between px-8 py-3 border-b border-gray-200 bg-white">
-      <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-        <div className="w-10 h-10 rounded-full bg-[#1a2a6c] flex items-center justify-center text-white font-semibold text-sm">
-          P
-        </div>
+      <a href="/" className="flex items-center gap-1 hover:opacity-80 transition-opacity">
+        <img src="/web-app-manifest-512x512.png" alt="Career @ Penn" className="w-10 h-10 rounded-full object-cover" />
         <span className="text-lg font-semibold text-gray-900">Career @ Penn</span>
       </a>
 

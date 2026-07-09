@@ -86,7 +86,7 @@ export default function EntryForm() {
         body: JSON.stringify(profile),
       });
     } catch {
-      // guest flow — continue without saving
+      // guest flow, continue without saving
     }
     router.push("/internship");
     setLoading(false);

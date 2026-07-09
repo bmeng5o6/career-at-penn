@@ -1,9 +1,7 @@
 export default function HeroSection() {
   return (
     <section className="flex items-center justify-center gap-14 py-28 px-8 bg-[#f7f9ff] border-b border-[#dde3f5]">
-      <div className="w-32 h-32 rounded-full border-4 border-[#1a2a6c] bg-gradient-to-br from-[#e8eaf8] to-[#c8ccf0] flex items-center justify-center shrink-0 shadow-lg">
-        <span className="text-4xl font-bold text-[#1a2a6c]">P</span>
-      </div>
+      <img src="/web-app-manifest-512x512.png" alt="Career @ Penn" className="w-32 h-32 rounded-full object-cover shrink-0 shadow-lg border-4 border-[#1a2a6c]" />
       <div>
         <h1 className="text-6xl font-bold tracking-tight text-[#0d1b4b] leading-tight">Career @ Penn</h1>
         <p className="mt-4 text-lg text-gray-400 max-w-md leading-relaxed">

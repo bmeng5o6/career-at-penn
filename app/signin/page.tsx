@@ -31,9 +31,7 @@ function SignInContent() {
   return (
     <div className="max-w-md mx-auto px-6 py-16">
       <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm text-center">
-        <div className="w-12 h-12 rounded-full bg-[#1a2a6c] flex items-center justify-center mx-auto mb-5">
-          <span className="text-lg font-bold text-white">P</span>
-        </div>
+        <img src="/web-app-manifest-512x512.png" alt="Career @ Penn" className="w-12 h-12 rounded-full object-cover mx-auto mb-5 border-2 border-[#1a2a6c]" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Sign in to Career @ Penn</h1>
         <p className="text-sm text-gray-500 mb-8">
           Save your profile and access personalized internship data.

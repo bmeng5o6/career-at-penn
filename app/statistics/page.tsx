@@ -572,7 +572,7 @@ export default function StatisticsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Penn Outcomes Statistics</h1>
-          <p className="text-gray-500 mt-1">Post-graduation and internship data across Penn schools — filter and explore.</p>
+          <p className="text-gray-500 mt-1">Post-graduation and internship data across Penn schools.</p>
         </div>
 
         {/* Tabs */}
