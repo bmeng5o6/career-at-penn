@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { parseBody } from "@/lib/sanitize";
 
 export async function GET() {
   try {
@@ -7,7 +8,6 @@ export async function GET() {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      // Not logged in — return empty profile so the form renders
       return NextResponse.json({ id: null, name: "", school: "", major: "", class_year: "", clubs: "" });
     }
 
@@ -43,11 +43,10 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
-    // No auth check — guests are allowed through
 
-    const { name, school, major, class_year, clubs } = await req.json();
+    const raw = await req.json();
+    const { name, school, major, class_year, clubs } = parseBody(raw);
 
-    // Only persist to DB if the user is logged in
     if (user) {
       const { data, error } = await supabase
         .from("user-info")
@@ -68,7 +67,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, data }, { status: 201 });
     }
 
-    // Guest — acknowledge without persisting
     return NextResponse.json({ success: true, data: null }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -84,8 +82,10 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id, name, school, major, class_year, clubs } = await req.json();
+    const raw = await req.json();
+    const { name, school, major, class_year, clubs } = parseBody(raw);
 
+    const id = typeof raw.id === "number" ? raw.id : null;
     if (!id) {
       return NextResponse.json({ error: "Missing profile id" }, { status: 400 });
     }

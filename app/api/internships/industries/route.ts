@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAnonClient } from "@/lib/supabase/anon";
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year");
     const isProjected = searchParams.get("is_projected");
 
-    const supabase = await createClient();
+    const supabase = getAnonClient();
 
     let query = supabase
       .from("industry_breakdown")
@@ -19,8 +19,7 @@ export async function GET(request: NextRequest) {
     if (year) query = query.eq("year", parseInt(year));
     if (isProjected) query = query.eq("is_projected", isProjected === "true");
 
-    query = query
-      .order("percentage", { ascending: false });
+    query = query.order("percentage", { ascending: false });
 
     const { data, error, count } = await query;
 
@@ -28,14 +27,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      data,
-      meta: { total: count },
-    });
-  } catch {
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { data, meta: { total: count } },
+      { headers: { "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600" } }
     );
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAnonClient } from "@/lib/supabase/anon";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = getAnonClient();
 
     const { data, error } = await supabase
       .from("employers")
@@ -16,11 +16,11 @@ export async function GET() {
 
     const schools = [...new Set(data.map((row: { school: string }) => row.school))];
 
-    return NextResponse.json({ schools });
-  } catch {
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { schools },
+      { headers: { "Cache-Control": "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400" } }
     );
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

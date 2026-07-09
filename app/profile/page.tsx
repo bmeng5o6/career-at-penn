@@ -4,42 +4,62 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 
 const SCHOOLS = ["SEAS", "Wharton", "CAS", "Nursing"];
-const MAJORS = ["CIS", "Math", "Finance", "Economics", "Biology", "Political Science"];
 const YEARS = ["2026", "2027", "2028", "2029", "2030"];
 
 const inputClassName =
   "w-full text-sm text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]";
 
+function useMajors(school: string) {
+  const [majors, setMajors] = useState<string[]>([]);
+  useEffect(() => {
+    if (!school) { setMajors([]); return; }
+    fetch(`/api/penn-majors?schools=${encodeURIComponent(school)}`)
+      .then((r) => r.json())
+      .then((d) => setMajors(d.majors ?? []))
+      .catch(() => setMajors([]));
+  }, [school]);
+  return majors;
+}
+
 type ProfileData = {
   id: number | null;
   name: string;
-  school: string;
-  major: string;
+  school: string;    // comma-separated, e.g. "SEAS, Wharton"
+  major: string;     // pipe-separated, e.g. "CS, BSE | Finance, BS"
   class_year: string;
   clubs: string;
 };
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData>({
-    id: null,
-    name: "",
-    school: "",
-    major: "",
-    class_year: "",
-    clubs: "",
+    id: null, name: "", school: "", major: "", class_year: "", clubs: "",
   });
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [schoolOpen, setSchoolOpen] = useState(false);
-
   const schoolRef = useRef<HTMLDivElement>(null);
 
   const selectedSchools = useMemo(
     () => profile.school.split(",").map((s) => s.trim()).filter(Boolean),
     [profile.school]
   );
+
+  const majorParts = useMemo(
+    () => profile.major.split(" | ").map((m) => m.trim()),
+    [profile.major]
+  );
+
+  const school1 = selectedSchools[0] ?? "";
+  const school2 = selectedSchools[1] ?? "";
+  const majors1 = useMajors(school1);
+  const majors2 = useMajors(school2);
+
+  function setMajorPart(index: 0 | 1, value: string) {
+    const parts = [...majorParts];
+    parts[index] = value;
+    setProfile((p) => ({ ...p, major: parts.filter(Boolean).join(" | ") }));
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -56,8 +76,28 @@ export default function ProfilePage() {
       try {
         const res = await fetch("/api/user");
         const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed to load");
 
-        if (!res.ok) throw new Error(json.error || "Failed to load profile");
+        // If no saved profile on server, fall back to localStorage guest data
+        if (json.id === null) {
+          try {
+            const raw = localStorage.getItem("guestProfile");
+            if (raw) {
+              const g = JSON.parse(raw);
+              setProfile({
+                id: null,
+                name: g.name ?? "",
+                school: g.school ?? "",
+                major: g.major ?? "",
+                class_year: g.class_year ?? "",
+                clubs: g.clubs ?? "",
+              });
+              return;
+            }
+          } catch {
+            // malformed localStorage — ignore
+          }
+        }
 
         setProfile({
           id: json.id ?? null,
@@ -67,8 +107,7 @@ export default function ProfilePage() {
           class_year: json.class_year ?? "",
           clubs: json.clubs ?? "",
         });
-      } catch (err) {
-        console.error(err);
+      } catch {
         setMessage("Could not load profile.");
       } finally {
         setLoading(false);
@@ -85,7 +124,13 @@ export default function ProfilePage() {
     const current = [...selectedSchools];
     const exists = current.includes(school);
     if (exists) {
-      updateField("school", current.filter((s) => s !== school).join(", "));
+      const next = current.filter((s) => s !== school);
+      updateField("school", next.join(", "));
+      // drop the major for the removed school
+      const idx = current.indexOf(school);
+      const parts = [...majorParts];
+      parts.splice(idx, 1);
+      setProfile((p) => ({ ...p, school: next.join(", "), major: parts.filter(Boolean).join(" | ") }));
     } else {
       if (current.length >= 2) return;
       updateField("school", [...current, school].join(", "));
@@ -95,7 +140,6 @@ export default function ProfilePage() {
   async function handleSave() {
     setSaving(true);
     setMessage("");
-
     try {
       const isNew = profile.id === null;
       const res = await fetch("/api/user", {
@@ -110,17 +154,21 @@ export default function ProfilePage() {
           clubs: profile.clubs,
         }),
       });
-
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to update profile");
-
+      if (!res.ok) throw new Error(json.error || "Failed to save");
       if (isNew && json.data?.[0]?.id) {
         setProfile((prev) => ({ ...prev, id: json.data[0].id }));
       }
-
+      // persist to localStorage too so guest flow stays in sync
+      localStorage.setItem("guestProfile", JSON.stringify({
+        name: profile.name,
+        school: profile.school,
+        major: profile.major,
+        class_year: profile.class_year,
+        clubs: profile.clubs,
+      }));
       setMessage("Profile updated successfully.");
-    } catch (err) {
-      console.error(err);
+    } catch {
       setMessage("Failed to update profile.");
     } finally {
       setSaving(false);
@@ -138,7 +186,15 @@ export default function ProfilePage() {
 
         <div className="bg-white border border-gray-200 rounded-xl p-7 shadow-sm">
           {loading ? (
-            <div className="text-gray-400">Loading profile...</div>
+            <div className="animate-pulse space-y-4">
+              <div className="h-9 bg-gray-100 rounded" />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="h-9 bg-gray-100 rounded" />
+                <div className="h-9 bg-gray-100 rounded" />
+                <div className="h-9 bg-gray-100 rounded" />
+              </div>
+              <div className="h-28 bg-gray-100 rounded" />
+            </div>
           ) : (
             <>
               <div className="mb-5">
@@ -152,12 +208,13 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+              {/* School picker */}
+              <div className="mb-4">
+                <label className="block text-sm text-gray-500 mb-1">School (up to 2)</label>
                 <div className="relative" ref={schoolRef}>
-                  <label className="block text-sm text-gray-500 mb-1">School (up to 2)</label>
                   <div
                     className="w-full text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 cursor-pointer flex justify-between items-center"
-                    onClick={() => setSchoolOpen((prev) => !prev)}
+                    onClick={() => setSchoolOpen((p) => !p)}
                   >
                     <span className={selectedSchools.length ? "text-gray-900" : "text-gray-400"}>
                       {selectedSchools.length ? selectedSchools.join(", ") : "Select school(s)"}
@@ -166,46 +223,76 @@ export default function ProfilePage() {
                   </div>
                   {schoolOpen && (
                     <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-md mt-1">
-                      {SCHOOLS.map((school) => {
-                        const checked = selectedSchools.includes(school);
+                      {SCHOOLS.map((s) => {
+                        const checked = selectedSchools.includes(s);
                         const disabled = !checked && selectedSchools.length >= 2;
                         return (
                           <label
-                            key={school}
-                            className={`flex items-center gap-2 px-3 py-2 text-sm ${
-                              disabled ? "text-gray-400 opacity-60 cursor-not-allowed" : "text-gray-900 cursor-pointer hover:bg-gray-50"
-                            }`}
+                            key={s}
+                            className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${disabled ? "text-gray-300 cursor-not-allowed" : "text-gray-900"}`}
                           >
                             <input
                               type="checkbox"
                               checked={checked}
                               disabled={disabled}
-                              onChange={() => toggleSchool(school)}
-                              className="h-4 w-4 rounded border-gray-300 text-[#1a2a6c] focus:ring-[#1a2a6c]"
+                              onChange={() => toggleSchool(s)}
+                              className="h-4 w-4 rounded border-gray-300"
                             />
-                            {school}
+                            {s}
                           </label>
                         );
                       })}
                     </div>
                   )}
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">Major</label>
-                  <select value={profile.major} onChange={(e) => updateField("major", e.target.value)} className={inputClassName}>
-                    <option value="">Select major</option>
-                    {MAJORS.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
+              {/* Major dropdowns — one per school */}
+              <div className={`grid gap-3 mb-4 ${school2 ? "grid-cols-2" : "grid-cols-1"}`}>
+                {school1 ? (
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">
+                      {school2 ? `${school1} Major` : "Major"}
+                    </label>
+                    <select
+                      value={majorParts[0] ?? ""}
+                      onChange={(e) => setMajorPart(0, e.target.value)}
+                      className={inputClassName}
+                    >
+                      <option value="">Select major</option>
+                      {majors1.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">Major</label>
+                    <select className={inputClassName} disabled>
+                      <option>Select school first</option>
+                    </select>
+                  </div>
+                )}
+                {school2 && (
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">{school2} Major</label>
+                    <select
+                      value={majorParts[1] ?? ""}
+                      onChange={(e) => setMajorPart(1, e.target.value)}
+                      className={inputClassName}
+                    >
+                      <option value="">Select major</option>
+                      {majors2.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
 
-                <div>
-                  <label className="block text-sm text-gray-500 mb-1">Class Year</label>
-                  <select value={profile.class_year} onChange={(e) => updateField("class_year", e.target.value)} className={inputClassName}>
-                    <option value="">Select year</option>
-                    {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                  </select>
-                </div>
+              {/* Year */}
+              <div className="mb-5">
+                <label className="block text-sm text-gray-500 mb-1">Class Year</label>
+                <select value={profile.class_year} onChange={(e) => updateField("class_year", e.target.value)} className={inputClassName}>
+                  <option value="">Select year</option>
+                  {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                </select>
               </div>
 
               <div className="mb-6">
@@ -226,7 +313,11 @@ export default function ProfilePage() {
                 >
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
-                {message && <p className="text-sm text-gray-500">{message}</p>}
+                {message && (
+                  <p className={`text-sm ${message.includes("success") ? "text-green-600" : "text-red-500"}`}>
+                    {message}
+                  </p>
+                )}
               </div>
             </>
           )}

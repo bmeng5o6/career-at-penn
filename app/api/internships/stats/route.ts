@@ -1,24 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAnonClient } from "@/lib/supabase/anon";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const school = searchParams.get("school");
 
-    const supabase = await createClient();
+    const supabase = getAnonClient();
 
-    let query = supabase.from("employers").select("*");
+    let query = supabase
+      .from("employers")
+      .select("company, year, hourly_median, data_basis");
 
     if (school) {
       query = query.ilike("school", school);
     }
 
-    const { data, error } = await query;
+    const { data: rawData, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    type Row = { company: string; year: number | null; hourly_median: number | null; data_basis: string | null };
+    const data = rawData as Row[];
 
     if (!data.length) {
       return NextResponse.json({ error: "No data found" }, { status: 404 });
@@ -56,7 +61,10 @@ export async function GET(request: NextRequest) {
       ...(school ? { school } : {}),
     };
 
-    return NextResponse.json({ stats });
+    return NextResponse.json(
+      { stats },
+      { headers: { "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600" } }
+    );
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

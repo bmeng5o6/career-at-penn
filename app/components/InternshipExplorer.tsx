@@ -454,6 +454,9 @@ export default function InternshipExplorer() {
           setEmployers(previewEmployers);
           setIndustries(previewIndustries);
           setListings(previewListings);
+          setAllListings(previewListings);
+          setListingOffset(previewListings.length);
+          setHasMoreListings(false);
           setEmployerMeta({ total: previewEmployers.length });
           setListingMeta({ total: previewListings.length });
           setPreviewMode(true);
@@ -556,17 +559,17 @@ export default function InternshipExplorer() {
     {
       label: "Employer records",
       value: stats?.record_count?.toLocaleString() ?? "--",
-      tone: "from-slate-900 to-slate-800 text-black",
+      tone: "bg-gradient-to-br from-slate-900 to-slate-800 text-white",
     },
     {
       label: "Unique companies",
       value: stats?.unique_companies?.toLocaleString() ?? "--",
-      tone: "from-amber-100 to-yellow-50 text-slate-900",
+      tone: "bg-gradient-to-br from-amber-100 to-yellow-50 text-slate-900",
     },
     {
       label: "Median internship pay",
       value: stats ? formatCurrency(stats.compensation.median_hourly, "hour") : "--",
-      tone: "from-white to-slate-100 text-slate-900",
+      tone: "bg-gradient-to-br from-white to-slate-100 text-slate-900",
     },
     {
       label: "Coverage window",
@@ -575,7 +578,7 @@ export default function InternshipExplorer() {
           ? `${stats.year_range.min} - ${stats.year_range.max}`
           : "--"
       ),
-      tone: "from-[#dbe7ff] to-white text-slate-900",
+      tone: "bg-gradient-to-br from-[#dbe7ff] to-white text-slate-900",
     },
   ];
 
@@ -587,8 +590,8 @@ export default function InternshipExplorer() {
             Internship Intelligence
           </h1>
           <p className="mt-3 max-w-2xl text-lg text-gray-500">
-            Crowd-sourced Penn internship data, organized into a clean employer view using only
-            the fields currently available in your API.
+            Crowd-sourced Penn internship data — compensation, placements, and employer trends
+            across all schools and class years.
           </p>
           {previewMode ? (
             <div className="mt-4 inline-flex rounded-full border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-800">
@@ -630,6 +633,7 @@ export default function InternshipExplorer() {
               }
               className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#1a2a6c]"
             >
+              <option value="">All years</option>
               {[2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017].map((y) => (
                 <option key={y} value={String(y)}>{y}</option>
               ))}

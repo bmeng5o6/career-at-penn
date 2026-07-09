@@ -4,11 +4,27 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 const SCHOOLS = ["SEAS", "Wharton", "CAS", "Nursing"];
-const MAJORS  = ["CIS", "Math", "Finance", "Economics", "Biology", "Political Science"];
 const YEARS   = ["2026", "2027", "2028", "2029", "2030"];
 
 const selectClassName =
   "w-full text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1a2a6c]";
+
+function useMajors(school: string) {
+  const [majors, setMajors] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!school) { setMajors([]); return; }
+    setLoading(true);
+    fetch(`/api/penn-majors?schools=${encodeURIComponent(school)}`)
+      .then((r) => r.json())
+      .then((d) => setMajors(d.majors ?? []))
+      .catch(() => setMajors([]))
+      .finally(() => setLoading(false));
+  }, [school]);
+
+  return { majors, loading };
+}
 
 export default function EntryForm() {
   const router = useRouter();
@@ -17,37 +33,20 @@ export default function EntryForm() {
   const [schoolPrimary, setSchoolPrimary] = useState("");
   const [schoolSecondary, setSchoolSecondary] = useState("");
   const [schoolOpen, setSchoolOpen] = useState(false);
-  const [major, setMajor] = useState("");
+  const [majorPrimary, setMajorPrimary] = useState("");
+  const [majorSecondary, setMajorSecondary] = useState("");
   const [year, setYear] = useState("");
   const [clubs, setClubs] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
 
   const schoolRef = useRef<HTMLDivElement>(null);
 
-  const schools = [...new Set([schoolPrimary, schoolSecondary].filter(Boolean))];
-  const schoolForDb = schools.join(", ");
+  const { majors: majors1, loading: loadingMajors1 } = useMajors(schoolPrimary);
+  const { majors: majors2, loading: loadingMajors2 } = useMajors(schoolSecondary);
 
-  // If authenticated user already has a saved profile, skip this form
-  useEffect(() => {
-    async function check() {
-      try {
-        const res = await fetch("/api/user");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.id !== null) {
-            router.replace("/internship");
-            return;
-          }
-        }
-        // 401 = not logged in, or no profile yet — either way, show the form
-      } catch {
-        // network error — show form anyway
-      }
-      setChecking(false);
-    }
-    check();
-  }, [router]);
+  // Reset majors when schools change
+  useEffect(() => { setMajorPrimary(""); }, [schoolPrimary]);
+  useEffect(() => { setMajorSecondary(""); }, [schoolSecondary]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -59,15 +58,27 @@ export default function EntryForm() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  function toggleSchool(o: string) {
+    const selected = [schoolPrimary, schoolSecondary].filter(Boolean);
+    const checked = selected.includes(o);
+    if (checked) {
+      const remaining = selected.filter((s) => s !== o);
+      setSchoolPrimary(remaining[0] || "");
+      setSchoolSecondary(remaining[1] || "");
+    } else {
+      if (!schoolPrimary) setSchoolPrimary(o);
+      else if (!schoolSecondary) setSchoolSecondary(o);
+    }
+  }
+
+  const selected = [schoolPrimary, schoolSecondary].filter(Boolean);
+  const majorForDb = [majorPrimary, majorSecondary].filter(Boolean).join(" | ");
+  const schoolForDb = selected.join(", ");
+
   async function handleSubmit() {
     setLoading(true);
-
-    const profile = { name, school: schoolForDb, major, class_year: year, clubs };
-
-    // Always cache locally — used by /internship for both guests and logged-in users
+    const profile = { name, school: schoolForDb, major: majorForDb, class_year: year, clubs };
     localStorage.setItem("guestProfile", JSON.stringify(profile));
-
-    // Attempt to persist to DB if the user is logged in; ignore failures silently
     try {
       await fetch("/api/user", {
         method: "POST",
@@ -75,20 +86,18 @@ export default function EntryForm() {
         body: JSON.stringify(profile),
       });
     } catch {
-      // not logged in or network error — guest flow, just continue
+      // guest flow — continue without saving
     }
-
     router.push("/internship");
     setLoading(false);
   }
 
-  if (checking) return null;
-
   return (
-    <section className="bg-gray-100 py-12 px-8">
-      <div className="bg-white border border-gray-200 rounded-xl p-7 max-w-xl mx-auto">
-        <h3 className="text-purple-600 font-medium mb-5">Tell us about yourself</h3>
+    <section id="entry-form" className="bg-[#edf0f9] py-14 px-8">
+      <div className="bg-white border border-gray-200 rounded-2xl p-8 max-w-xl mx-auto shadow-md">
+        <h3 className="text-xs font-semibold text-[#1a2a6c] uppercase tracking-widest mb-6">Tell us about yourself</h3>
 
+        {/* Name */}
         <div className="mb-5">
           <label className="block text-sm text-gray-500 mb-1">Full Name</label>
           <input
@@ -100,42 +109,34 @@ export default function EntryForm() {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        {/* School picker */}
+        <div className="mb-4">
+          <label className="block text-sm text-gray-500 mb-1">School (up to 2)</label>
           <div className="relative" ref={schoolRef}>
-            <label className="block text-sm text-gray-500 mb-1">School (up to 2)</label>
             <div
               className="w-full text-sm text-gray-900 border border-gray-300 rounded-md px-3 py-2 bg-gray-50 cursor-pointer flex justify-between items-center"
               onClick={() => setSchoolOpen(!schoolOpen)}
             >
-              <span className={schools.length ? "text-gray-900" : "text-gray-400"}>
-                {schools.length ? schools.join(", ") : "Select school(s)"}
+              <span className={selected.length ? "text-gray-900" : "text-gray-400"}>
+                {selected.length ? selected.join(", ") : "Select school(s)"}
               </span>
               <span className="text-gray-400 text-xs">{schoolOpen ? "▲" : "▼"}</span>
             </div>
             {schoolOpen && (
               <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-md mt-1">
                 {SCHOOLS.map((o) => {
-                  const checked = schools.includes(o);
-                  const disabled = !checked && schools.length >= 2;
+                  const checked = selected.includes(o);
+                  const disabled = !checked && selected.length >= 2;
                   return (
                     <label
                       key={o}
-                      className={`flex items-center gap-2 px-3 py-2 text-sm text-gray-900 cursor-pointer hover:bg-gray-50 ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${disabled ? "text-gray-300 cursor-not-allowed" : "text-gray-900"}`}
                     >
                       <input
                         type="checkbox"
                         checked={checked}
                         disabled={disabled}
-                        onChange={() => {
-                          if (checked) {
-                            const remaining = schools.filter(s => s !== o);
-                            setSchoolPrimary(remaining[0] || "");
-                            setSchoolSecondary(remaining[1] || "");
-                          } else {
-                            if (!schoolPrimary) setSchoolPrimary(o);
-                            else setSchoolSecondary(o);
-                          }
-                        }}
+                        onChange={() => toggleSchool(o)}
                       />
                       {o}
                     </label>
@@ -144,24 +145,58 @@ export default function EntryForm() {
               </div>
             )}
           </div>
-
-          <div>
-            <label className="block text-sm text-gray-500 mb-1">Major</label>
-            <select value={major} onChange={(e) => setMajor(e.target.value)} className={selectClassName}>
-              <option value="">Select major</option>
-              {MAJORS.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm text-gray-500 mb-1">Class Year</label>
-            <select value={year} onChange={(e) => setYear(e.target.value)} className={selectClassName}>
-              <option value="">Select year</option>
-              {YEARS.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </div>
         </div>
 
+        {/* Major row(s) */}
+        <div className={`grid gap-3 mb-5 ${schoolSecondary ? "grid-cols-2" : "grid-cols-1"}`}>
+          {schoolPrimary && (
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">
+                {schoolSecondary ? `${schoolPrimary} Major` : "Major"}
+              </label>
+              <select
+                value={majorPrimary}
+                onChange={(e) => setMajorPrimary(e.target.value)}
+                className={selectClassName}
+              >
+                <option value="">{loadingMajors1 ? "Loading..." : "Select major"}</option>
+                {majors1.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+          )}
+          {schoolSecondary && (
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">{schoolSecondary} Major</label>
+              <select
+                value={majorSecondary}
+                onChange={(e) => setMajorSecondary(e.target.value)}
+                className={selectClassName}
+              >
+                <option value="">{loadingMajors2 ? "Loading..." : "Select major"}</option>
+                {majors2.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+          )}
+          {!schoolPrimary && (
+            <div>
+              <label className="block text-sm text-gray-500 mb-1">Major</label>
+              <select className={selectClassName} disabled>
+                <option value="">Select school first</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Year */}
+        <div className="mb-5">
+          <label className="block text-sm text-gray-500 mb-1">Class Year</label>
+          <select value={year} onChange={(e) => setYear(e.target.value)} className={selectClassName}>
+            <option value="">Select year</option>
+            {YEARS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+
+        {/* Clubs */}
         <div className="mb-5">
           <label className="block text-sm text-gray-500 mb-1">Campus Clubs & Recreation</label>
           <textarea
@@ -175,10 +210,15 @@ export default function EntryForm() {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-[#1a2a6c] text-white py-3 rounded-md text-sm font-medium hover:bg-[#253a8e] disabled:opacity-50 transition-colors"
+          className="w-full bg-[#1a2a6c] text-white py-3 rounded-lg text-sm font-semibold hover:bg-[#253a8e] disabled:opacity-50 transition-colors"
         >
           {loading ? "Loading..." : "Enter Career@Penn  ›"}
         </button>
+
+        <p className="mt-4 text-center text-xs text-gray-400">
+          <a href="/signin" className="text-[#1a2a6c] font-medium hover:underline">Sign in with Google</a>
+          {" to save your profile"}
+        </p>
       </div>
     </section>
   );

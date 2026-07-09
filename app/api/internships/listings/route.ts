@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAnonClient } from "@/lib/supabase/anon";
 
-const ALLOWED_SORT_COLUMNS = [
-  "company",
-  "role",
-  "major",
-  "school",
-  "class_year",
-  "count",
-];
+const ALLOWED_SORT_COLUMNS = ["company", "role", "major", "school", "class_year", "count"];
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = getAnonClient();
 
     let query = supabase
       .from("major_listings")
@@ -51,19 +44,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      data,
-      meta: {
-        total: count,
-        limit,
-        offset,
-        has_more: offset + limit < (count ?? 0),
-      },
-    });
-  } catch {
     return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+      { data, meta: { total: count, limit, offset, has_more: offset + limit < (count ?? 0) } },
+      { headers: { "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600" } }
     );
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
